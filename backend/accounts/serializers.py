@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Usuario
+import re
+
+from validate_docbr import CPF, CNPJ
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email_usuario'
@@ -33,6 +36,17 @@ class UsuarioCadastroSerializer(serializers.ModelSerializer):
             'tel_usuario',
             'cpf_cnpj_usuario',
         ]
+
+    def validate_cpf_cnpj_usuario(self, value):
+        cpf = CPF()
+        cnpj = CNPJ()
+
+        if not cpf.validate(value) and not cnpj.validate(value):
+            raise serializers.ValidationError("CPF ou CNPJ inválido.")
+
+        value_regex = re.sub(r'[^a-zA-Z0-9]', '', value)
+
+        return value_regex
 
     def create(self, validated_data):
         senha = validated_data.pop('senha')
