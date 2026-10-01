@@ -1,5 +1,9 @@
 from django.db import models
+
+from accounts.models import Usuario
 from catalog.models import ProdutoVariacao
+from orders.models import Pedido
+
 
 class MateriaPrima(models.Model):
     id_materia_prima = models.BigAutoField(primary_key=True, db_column='id_materia_prima')
@@ -40,6 +44,8 @@ class MovimentacaoEstoque(models.Model):
 
     id_movimentacao = models.BigAutoField(primary_key=True, db_column='id_movimentacao')
     id_variacao = models.ForeignKey(ProdutoVariacao, on_delete=models.CASCADE, db_column='id_variacao', related_name='movimentacoes')
+    id_usuario_responsavel = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, db_column='id_usuario_responsavel', related_name='movimentacoes')
+    id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True, db_column='id_pedido', related_name='movimentacoes')
     tp_movimentacao = models.CharField(max_length=20, choices=TIPO_CHOICES, db_column='tp_movimentacao')
     qtd_movimentacao = models.IntegerField(db_column='qtd_movimentacao')
     ds_observacao = models.TextField(blank=True, null=True, db_column='ds_observacao')
