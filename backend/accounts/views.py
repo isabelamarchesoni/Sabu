@@ -23,8 +23,8 @@ class CadastroUsuarioView(generics.CreateAPIView):
             "message": "Usuário cadastrado com sucesso!",
             "user": {
                 "id_usuario": usuario.id_usuario,
-                "nm_usuario": usuario.nm_usuario,
-                "ds_email": usuario.ds_email,
-                "tp_cargo": usuario.tp_cargo
+                "nome": usuario.nm_usuario,
+                "email": usuario.email,
+                "cargo": usuario.tp_cargo
             }
         }, status=status.HTTP_201_CREATED)

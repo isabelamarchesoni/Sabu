@@ -7,7 +7,7 @@ from validate_docbr import CPF, CNPJ
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    username_field = 'ds_email'
+    username_field = 'email'
 
     def validate(self, attrs):
         # Executa a validação padrão do SimpleJWT (verifica e-mail e senha)
@@ -15,8 +15,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # Adiciona as informações do usuário no JSON de resposta
         data['id_usuario'] = self.user.id_usuario
-        data['nm_usuario'] = self.user.nm_usuario
-        data['tp_cargo'] = self.user.tp_cargo
+        data['nome'] = self.user.nm_usuario
+        data['cargo'] = self.user.tp_cargo
 
         return data
 
@@ -28,23 +28,27 @@ class UsuarioCadastroSerializer(serializers.ModelSerializer):
         style={'input_type': 'password'}
     )
 
+    nome = serializers.CharField(source='nm_usuario')
+    telefone = serializers.CharField(source='nr_telefone')
+    cpf_cnpj = serializers.CharField(source='nr_cpf_cnpj')
+
     class Meta:
         model = Usuario
         fields = [
-            'nm_usuario',
-            'ds_email',
+            'nome',
+            'email',
             'senha',
-            'nr_telefone',
-            'nr_cpf_cnpj',
+            'telefone',
+            'cpf_cnpj',
         ]
 
-    def validate_nm_usuario(self, value):
+    def validate_nome(self, value):
         if not re.match(r'^[a-zA-Za-fA-Fà-úÀ-ÚçÇ\s]+$', value):
             raise serializers.ValidationError("O nome não pode conter números ou caracteres especiais.")
 
         return value
 
-    def validate_nr_cpf_cnpj(self, value):
+    def validate_cpf_cnpj(self, value):
         if not value:
             return value
 
