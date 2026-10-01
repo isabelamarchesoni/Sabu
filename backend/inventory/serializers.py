@@ -12,6 +12,7 @@ class MateriaPrimaSerializer(serializers.ModelSerializer):
             'qtd_estoque',
             'vl_custo_unitario',
         ]
+        read_only_fields = ['id_materia_prima']
 
 
 class FichaTecnicaSerializer(serializers.ModelSerializer):
@@ -31,6 +32,7 @@ class FichaTecnicaDetalhadaSerializer(serializers.ModelSerializer):
     class Meta:
         model = FichaTecnica
         fields = ['id_ficha' ,'id_variacao', 'id_materia_prima', 'materia_prima', 'qtd_necessaria']
+        read_only_fields = ['id_ficha']
 
 
 class MovimentacaoEstoqueSerializer(serializers.ModelSerializer):
@@ -39,12 +41,14 @@ class MovimentacaoEstoqueSerializer(serializers.ModelSerializer):
         fields = [
             'id_movimentacao',
             'id_variacao',
+            'id_usuario_responsavel',
+            'id_pedido',
             'tp_movimentacao',
             'qtd_movimentacao',
             'ds_observacao',
             'dt_movimentacao',
         ]
-        read_only_fields = ['dt_movimentacao']
+        read_only_fields = ['id_movimentacao', 'id_usuario_responsavel', 'id_pedido', 'dt_movimentacao']
 
     def validate_qtd_movimentacao(self, value):
         if value <= 0:
