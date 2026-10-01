@@ -195,8 +195,8 @@ sabu/
 
 - [x] Pesquisa de campo com a cliente
 - [x] Definição de requisitos
-- [ ] Design UI mobile
-- [ ] Backend e API
+- [x] Design UI mobile
+- [x] Backend e API
 - [ ] Cadastro de produtos, insumos e estoque
 - [ ] Histórico de vendas e pedidos
 - [ ] MVP de precificação (regressão linear)
