@@ -38,6 +38,12 @@ class UsuarioCadastroSerializer(serializers.ModelSerializer):
             'nr_cpf_cnpj',
         ]
 
+    def validate_nm_usuario(self, value):
+        if not re.match(r'^[a-zA-Za-fA-Fà-úÀ-ÚçÇ\s]+$', value):
+            raise serializers.ValidationError("O nome não pode conter números ou caracteres especiais.")
+
+        return value
+
     def validate_nr_cpf_cnpj(self, value):
         if not value:
             return value
