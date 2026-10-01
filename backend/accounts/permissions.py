@@ -5,5 +5,5 @@ class IsAdminUserCargo(BasePermission):
         return bool(
             request.user and 
             request.user.is_authenticated and 
-            request.user.cargo_usuario == 'ADMIN'
+            request.user.tp_cargo == 'ADMIN'
         )

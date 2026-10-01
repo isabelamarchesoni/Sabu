@@ -24,7 +24,7 @@ class CadastroUsuarioView(generics.CreateAPIView):
             "user": {
                 "id_usuario": usuario.id_usuario,
                 "nm_usuario": usuario.nm_usuario,
-                "email_usuario": usuario.email_usuario,
-                "cargo_usuario": usuario.cargo_usuario
+                "ds_email": usuario.ds_email,
+                "tp_cargo": usuario.tp_cargo
             }
         }, status=status.HTTP_201_CREATED)
