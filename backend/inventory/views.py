@@ -27,7 +27,7 @@ class FichaTecnicaViewSet(viewsets.ModelViewSet):
         return FichaTecnicaSerializer
 
     def get_queryset(self):
-        queryset = FichaTecnica.objects.all()
+        queryset = FichaTecnica.objects.select_related('id_materia_prima')
         # Filtra as matérias-primas de uma variação específica via Query Parameter:
         # GET /api/v1/inventory/fichas-tecnicas/?variacao_id=1
         variacao_id = self.request.query_params.get('variacao_id')
