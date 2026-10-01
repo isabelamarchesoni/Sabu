@@ -23,7 +23,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 
 class ProdutoViewSet(viewsets.ModelViewSet):
     """CRUD de produtos com categorias M2M e filtro por tipo de pele"""
-    queryset = Produto.objects.filter(produto_ativo=True).order_by('nm_produto')
+    queryset = Produto.objects.filter(fl_ativo=True).order_by('nm_produto')
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -38,7 +38,7 @@ class ProdutoViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # O prefetch_related otimiza a consulta trazendo categorias e variações em poucas queries SQL
         queryset = Produto.objects.all().prefetch_related('categorias', 'variacoes').order_by('nm_produto')
-        
+
         # Filtro por ID da categoria (M2M): GET /api/v1/catalog/produtos/?categoria_id=2
         categoria_id = self.request.query_params.get('categoria_id')
         if categoria_id:
@@ -47,11 +47,11 @@ class ProdutoViewSet(viewsets.ModelViewSet):
         # Filtro por tipo de pele: GET /api/v1/catalog/produtos/?tipo_pele=OLEOSA
         tipo_pele = self.request.query_params.get('tipo_pele')
         if tipo_pele:
-            queryset = queryset.filter(tipo_pele_produto__iexact=tipo_pele)
+            queryset = queryset.filter(tp_pele__iexact=tipo_pele)
 
-        # Se não for ADMIN, exibe somente produtos com produto_ativo = True
-        if not (self.request.user.is_authenticated and self.request.user.cargo_usuario == 'ADMIN'):
-            queryset = queryset.filter(produto_ativo=True)
+        # Se não for ADMIN, exibe somente produtos com fl_ativo = True
+        if not (self.request.user.is_authenticated and self.request.user.tp_cargo == 'ADMIN'):
+            queryset = queryset.filter(fl_ativo=True)
 
         return queryset
 

@@ -14,14 +14,14 @@ class ProdutoVariacaoSerializer(serializers.ModelSerializer):
         fields = [
             'id_variacao',
             'id_produto',
-            'sku_produto',
+            'cd_sku',
             'nm_variacao',
-            'vl_produto',
-            'vl_promo_produto',
-            'dt_inicio_promo_produto',
-            'dt_fim_promo_produto',
-            'peso_gramas_produto',
-            'qtd_estoque_produto',
+            'vl_preco',
+            'vl_preco_promo',
+            'dt_inicio_promo',
+            'dt_fim_promo',
+            'ps_gramas',
+            'qtd_estoque',
         ]
 
 
@@ -39,8 +39,8 @@ class ProdutoSerializer(serializers.ModelSerializer):
             'id_produto',
             'nm_produto',
             'ds_produto',
-            'tipo_pele_produto',
-            'produto_ativo',
+            'tp_pele',
+            'fl_ativo',
             'dt_criacao',
             'categorias',
         ]
@@ -58,8 +58,8 @@ class ProdutoDetalhadoSerializer(serializers.ModelSerializer):
             'id_produto',
             'nm_produto',
             'ds_produto',
-            'tipo_pele_produto',
-            'produto_ativo',
+            'tp_pele',
+            'fl_ativo',
             'dt_criacao',
             'categorias',
             'variacoes',
