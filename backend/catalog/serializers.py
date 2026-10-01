@@ -6,6 +6,7 @@ class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Categoria
         fields = ['id_categoria', 'nm_categoria']
+        read_only_fields = ['id_categoria']
 
 
 class ProdutoVariacaoSerializer(serializers.ModelSerializer):
@@ -23,6 +24,7 @@ class ProdutoVariacaoSerializer(serializers.ModelSerializer):
             'ps_gramas',
             'qtd_estoque',
         ]
+        read_only_fields = ['id_variacao']
 
 
 class ProdutoSerializer(serializers.ModelSerializer):
@@ -44,7 +46,7 @@ class ProdutoSerializer(serializers.ModelSerializer):
             'dt_criacao',
             'categorias',
         ]
-        read_only_fields = ['dt_criacao']
+        read_only_fields = ['id_produto', 'dt_criacao']
 
 
 class ProdutoDetalhadoSerializer(serializers.ModelSerializer):
@@ -64,3 +66,4 @@ class ProdutoDetalhadoSerializer(serializers.ModelSerializer):
             'categorias',
             'variacoes',
         ]
+        read_only_fields = ['id_produto', 'dt_criacao']
