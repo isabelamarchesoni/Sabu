@@ -13,6 +13,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Executa a validação padrão do SimpleJWT (verifica e-mail e senha)
         data = super().validate(attrs)
 
+        if not self.user.fl_ativo:
+            raise serializers.ValidationError("O conta do usuário não está ativa.")
+
         # Adiciona as informações do usuário no JSON de resposta
         data['id_usuario'] = self.user.id_usuario
         data['nome'] = self.user.nm_usuario
