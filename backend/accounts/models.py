@@ -42,6 +42,10 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     objects = UsuarioManager()
 
+    @property
+    def is_active(self):
+        return self.fl_ativo
+
     class Meta:
         db_table = 'usuario'
 
