@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from accounts.mixins import AdminOnlyViewSetMixin
 from .models import MateriaPrima, FichaTecnica, MovimentacaoEstoque
 from .serializers import (
@@ -32,7 +32,11 @@ class FichaTecnicaViewSet(AdminOnlyViewSetMixin, viewsets.ModelViewSet):
         return queryset
 
 
-class MovimentacaoEstoqueViewSet(AdminOnlyViewSetMixin, viewsets.ModelViewSet):
+class MovimentacaoEstoqueViewSet(AdminOnlyViewSetMixin,
+                                 mixins.CreateModelMixin,
+                                 mixins.RetrieveModelMixin,
+                                 mixins.ListModelMixin,
+                                 viewsets.GenericViewSet):
     """Histórico e registro de movimentações de estoque (apenas admin)"""
     queryset = MovimentacaoEstoque.objects.all().order_by('-dt_movimentacao')
     serializer_class = MovimentacaoEstoqueSerializer
