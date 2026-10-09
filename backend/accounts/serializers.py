@@ -51,6 +51,26 @@ class UsuarioCadastroSerializer(serializers.ModelSerializer):
 
         return value
 
+    def validate_senha(self, value):
+        errors = []
+
+        if len(value) < 8:
+            errors.append("A senha não pode conter menos que 8 caracteres.")
+
+        if not re.search(r'[A-Z]', value):
+            errors.append("A senha deve conter pelo menos um caractere maiúsculo.")
+
+        if not re.search(r'[0-9]', value):
+            errors.append("A senha deve conter pelo menos um número.")
+
+        if not re.search(r'[\W_]', value):
+            errors.append("A senha deve conter pelo menos um caractere especial.")
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return value
+
     def validate_cpf_cnpj(self, value):
         if not value:
             return value
