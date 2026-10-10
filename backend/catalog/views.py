@@ -1,13 +1,14 @@
 from rest_framework import viewsets
 
 from accounts.mixins import PublicReadAdminWriteViewSetMixin
-from .models import Categoria, Produto, ProdutoVariacao
+from .models import Categoria, Produto, ProdutoVariacao, TipoPele
 from .serializers import (
     CategoriaSerializer,
     ProdutoSerializer,
     ProdutoDetalhadoSerializer,
     ProdutoVariacaoSerializer,
-    ProdutoVariacaoUpdateSerializer
+    ProdutoVariacaoUpdateSerializer,
+    TipoPeleSerializer,
 )
 
 
@@ -17,9 +18,15 @@ class CategoriaViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelViewSet):
     serializer_class = CategoriaSerializer
 
 
+class TipoPeleViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelViewSet):
+    """CRUD de tipos de pele (oleosa, mista, etc)"""
+    queryset = TipoPele.objects.all().order_by('nome')
+    serializer_class = TipoPeleSerializer
+
+
 class ProdutoViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelViewSet):
     """CRUD de produtos com categorias M2M e filtro por tipo de pele"""
-    queryset = Produto.objects.filter(esta_ativo=True).order_by('nome')
+    queryset = Produto.objects.all()
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
@@ -27,20 +34,24 @@ class ProdutoViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelViewSet):
         return ProdutoSerializer
 
     def get_queryset(self):
-        queryset = Produto.objects.all().prefetch_related('categorias', 'variacoes').order_by('nome')
-
-        categoria_id = self.request.query_params.get('categoria_id')
-        if categoria_id:
-            queryset = queryset.filter(categorias__id=categoria_id)
-
-        tipo_pele = self.request.query_params.get('tipo_pele')
-        if tipo_pele:
-            queryset = queryset.filter(tipo_pele__iexact=tipo_pele)
+        queryset = (
+            Produto.objects
+            .prefetch_related('categorias', 'variacoes', 'tipo_pele')
+            .order_by('nome')
+        )
 
         user = self.request.user
         is_admin = user.is_authenticated and getattr(user, 'tp_cargo', None) == 'ADMIN'
         if not is_admin:
             queryset = queryset.filter(esta_ativo=True)
+
+        categoria_id = self.request.query_params.get('categoria_id')
+        if categoria_id:
+            queryset = queryset.filter(categorias__id=categoria_id).distinct()
+
+        tipo_pele_id = self.request.query_params.get('tipo_pele_id')
+        if tipo_pele_id:
+            queryset = queryset.filter(tipo_pele__id=tipo_pele_id).distinct()
 
         return queryset
 
