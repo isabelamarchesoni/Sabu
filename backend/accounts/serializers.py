@@ -13,13 +13,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Executa a validação padrão do SimpleJWT (verifica e-mail e senha)
         data = super().validate(attrs)
 
-        if not self.user.fl_ativo:
+        if not self.user.cargo:
             raise serializers.ValidationError("O conta do usuário não está ativa.")
 
         # Adiciona as informações do usuário no JSON de resposta
-        data['id_usuario'] = self.user.id_usuario
-        data['nome'] = self.user.nm_usuario
-        data['cargo'] = self.user.tp_cargo
+        data['id'] = self.user.id
+        data['nome'] = self.user.nome
+        data['cargo'] = self.user.cargo
 
         return data
 
@@ -30,10 +30,6 @@ class UsuarioCadastroSerializer(serializers.ModelSerializer):
         required=True,
         style={'input_type': 'password'}
     )
-
-    nome = serializers.CharField(source='nm_usuario')
-    telefone = serializers.CharField(source='nr_telefone')
-    cpf_cnpj = serializers.CharField(source='nr_cpf_cnpj')
 
     class Meta:
         model = Usuario
@@ -91,7 +87,7 @@ class UsuarioCadastroSerializer(serializers.ModelSerializer):
         # Força o cargo como 'CLIENTE' no momento da criação
         usuario = Usuario.objects.create_user(
             password=senha,
-            tp_cargo='CLIENTE',
+            cargo='CLIENTE',
             **validated_data
         )
         return usuario
