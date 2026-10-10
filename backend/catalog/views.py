@@ -1,14 +1,13 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAdminUser
 
 from accounts.mixins import PublicReadAdminWriteViewSetMixin
-from accounts.permissions import IsAdminUserCargo
 from .models import Categoria, Produto, ProdutoVariacao
 from .serializers import (
     CategoriaSerializer,
     ProdutoSerializer,
     ProdutoDetalhadoSerializer,
     ProdutoVariacaoSerializer,
+    ProdutoVariacaoUpdateSerializer
 )
 
 
@@ -49,7 +48,11 @@ class ProdutoViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelViewSet):
 class ProdutoVariacaoViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelViewSet):
     """CRUD de Variações de Produto"""
     queryset = ProdutoVariacao.objects.all()
-    serializer_class = ProdutoVariacaoSerializer
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return ProdutoVariacaoSerializer
+        return ProdutoVariacaoUpdateSerializer
 
     def get_queryset(self):
         queryset = ProdutoVariacao.objects.all()

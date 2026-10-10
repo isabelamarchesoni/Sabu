@@ -26,6 +26,10 @@ class ProdutoVariacaoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
+class ProdutoVariacaoUpdateSerializer(ProdutoVariacaoSerializer):
+    class Meta(ProdutoVariacaoSerializer.Meta):
+        read_only_fields = ['id', 'quantidade_estoque']
+
 
 class ProdutoSerializer(serializers.ModelSerializer):
     # Aceita a lista de IDs de categorias no POST/PUT (ex: [1, 2])
