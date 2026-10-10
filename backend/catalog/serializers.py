@@ -1,30 +1,30 @@
 from rest_framework import serializers
-from .models import Categoria, Produto, ProdutoCategoria, ProdutoVariacao
+from .models import Categoria, Produto, ProdutoVariacao
 
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Categoria
-        fields = ['id_categoria', 'nm_categoria']
-        read_only_fields = ['id_categoria']
+        fields = ['id', 'nome']
+        read_only_fields = ['id']
 
 
 class ProdutoVariacaoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProdutoVariacao
         fields = [
-            'id_variacao',
-            'id_produto',
-            'cd_sku',
-            'nm_variacao',
-            'vl_preco',
-            'vl_preco_promo',
-            'dt_inicio_promo',
-            'dt_fim_promo',
-            'ps_gramas',
-            'qtd_estoque',
+            'id',
+            'produto',
+            'sku',
+            'nome',
+            'preco',
+            'preco_promo',
+            'inicio_promo',
+            'fim_promo',
+            'peso_gramas',
+            'quantidade_estoque',
         ]
-        read_only_fields = ['id_variacao']
+        read_only_fields = ['id']
 
 
 class ProdutoSerializer(serializers.ModelSerializer):
@@ -38,15 +38,15 @@ class ProdutoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Produto
         fields = [
-            'id_produto',
-            'nm_produto',
-            'ds_produto',
-            'tp_pele',
-            'fl_ativo',
-            'dt_criacao',
+            'id',
+            'nome',
+            'descricao',
+            'tipo_pele',
+            'esta_ativo',
+            'criado_em',
             'categorias',
         ]
-        read_only_fields = ['id_produto', 'dt_criacao']
+        read_only_fields = ['id', 'criado_em']
 
 
 class ProdutoDetalhadoSerializer(serializers.ModelSerializer):
@@ -57,13 +57,13 @@ class ProdutoDetalhadoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Produto
         fields = [
-            'id_produto',
-            'nm_produto',
-            'ds_produto',
-            'tp_pele',
-            'fl_ativo',
-            'dt_criacao',
+            'id',
+            'nome',
+            'descricao',
+            'tipo_pele',
+            'esta_ativo',
+            'criado_em',
             'categorias',
             'variacoes',
         ]
-        read_only_fields = ['id_produto', 'dt_criacao']
+        read_only_fields = ['id', 'criado_em']
