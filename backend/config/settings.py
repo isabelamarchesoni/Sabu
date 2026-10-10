@@ -54,7 +54,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'id_usuario',
+    'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
 
