@@ -5,6 +5,7 @@ from .serializers import (
     MateriaPrimaSerializer,
     FichaTecnicaSerializer,
     FichaTecnicaDetalhadaSerializer,
+    FichaTecnicaUpdateSerializer,
     MovimentacaoEstoqueSerializer,
 )
 
@@ -20,6 +21,8 @@ class FichaTecnicaViewSet(AdminOnlyViewSetMixin, viewsets.ModelViewSet):
     queryset = FichaTecnica.objects.all()
 
     def get_serializer_class(self):
+        if self.action in ('update', 'partial_update'):
+            return FichaTecnicaUpdateSerializer
         if self.action in ['list', 'retrieve']:
             return FichaTecnicaDetalhadaSerializer
         return FichaTecnicaSerializer

@@ -19,6 +19,7 @@ class FichaTecnicaSerializer(serializers.ModelSerializer):
     class Meta:
         model = FichaTecnica
         fields = ['id', 'variacao', 'materia_prima', 'quantidade_necessaria']
+        read_only_fields = ['id']
 
     def validate_quantidade_necessaria(self, value):
         if value <= 0:
@@ -26,13 +27,15 @@ class FichaTecnicaSerializer(serializers.ModelSerializer):
         return value
 
 
-class FichaTecnicaDetalhadaSerializer(serializers.ModelSerializer):
+class FichaTecnicaDetalhadaSerializer(FichaTecnicaSerializer):
     materia_prima = MateriaPrimaSerializer(read_only=True)
 
-    class Meta:
-        model = FichaTecnica
-        fields = ['id' ,'variacao', 'materia_prima', 'quantidade_necessaria']
-        read_only_fields = ['id']
+    class Meta(FichaTecnicaSerializer.Meta):
+        pass
+
+class FichaTecnicaUpdateSerializer(FichaTecnicaSerializer):
+    class Meta(FichaTecnicaSerializer.Meta):
+        read_only_fields = ['id', 'variacao']
 
 
 class MovimentacaoEstoqueSerializer(serializers.ModelSerializer):
