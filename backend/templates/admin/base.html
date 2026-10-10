@@ -3,139 +3,623 @@
 {% block extrahead %}
 {{ block.super }}
 <style>
+    /* --------------------------------------------------------------------------
+       1. Variáveis (modo claro)
+       -------------------------------------------------------------------------- */
     :root {
-        --primary: #636130;
+      --primary: #636130;
+      --secondary: #353204;
+      --accent: #e3d77a;
+      --primary-fg: #fff;
+
+      --body-fg: #2b2a14;
+      --body-bg: #fff;
+      --body-quiet-color: #6b6a4e;
+      --body-loud-color: #000;
+
+      --header-color: #f3efc4;
+      --header-branding-color: var(--accent);
+      --header-bg: var(--secondary);
+      --header-link-color: var(--primary-fg);
+
+      --breadcrumbs-fg: #e3e0b5;
+      --breadcrumbs-link-fg: var(--body-bg);
+      --breadcrumbs-bg: var(--primary);
+
+      --link-fg: #636130;
+      --link-hover-color: #353204;
+      --link-selected-fg: #4a4824;
+
+      --hairline-color: #e6e4d0;
+      --border-color: #cfccae;
+
+      --error-fg: #ba2121;
+
+      --message-success-bg: #e4ecc8;
+      --message-warning-bg: #f6efc2;
+      --message-error-bg: #fbe9e5;
+
+      --darkened-bg: #f7f6ea;
+      --selected-bg: #ebe9cf;
+      --selected-row: #f3efc4;
+
+      --button-fg: #fff;
+      --button-bg: var(--primary);
+      --button-hover-bg: #7a7840;
+      --default-button-bg: var(--secondary);
+      --default-button-hover-bg: #1f1d02;
+      --close-button-bg: #77765a;
+      --close-button-hover-bg: #353204;
+      --delete-button-bg: #ba2121;
+      --delete-button-hover-bg: #a41515;
+
+      --object-tools-fg: var(--button-fg);
+      --object-tools-bg: var(--close-button-bg);
+      --object-tools-hover-bg: var(--close-button-hover-bg);
+
+      --focus-ring: 0 0 0 3px rgba(99, 97, 48, 0.28);
+    }
+
+    /* --------------------------------------------------------------------------
+       2. Variáveis (modo escuro)
+       -------------------------------------------------------------------------- */
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --primary: #4a4824;
         --secondary: #353204;
-        --accent: #353204;
-        --primary-fg: #fff;
-        --breadcrumbs-bg: #353204;
+        --accent: #d8cb68;
+        --primary-fg: #f1efd6;
+
+        --body-fg: #e4e2c8;
+        --body-bg: #16160a;
+        --body-quiet-color: #a9a78a;
+        --body-loud-color: #fff;
+
+        --header-color: #e4e0b0;
+        --header-branding-color: var(--accent);
+        --header-bg: var(--secondary);
+        --header-link-color: var(--primary-fg);
+
+        --breadcrumbs-fg: #c9c691;
+        --breadcrumbs-link-fg: var(--body-loud-color);
+        --breadcrumbs-bg: #2a2910;
+
+        --link-fg: #cfc983;
+        --link-hover-color: #f0eaa5;
+        --link-selected-fg: #e3d77a;
+
+        --hairline-color: #2f2e17;
+        --border-color: #46441f;
+
+        --message-success-bg: #2c3a14;
+        --message-warning-bg: #3d3711;
+        --message-error-bg: #3f1d18;
+
+        --darkened-bg: #1e1e0e;
+        --selected-bg: #2f2e17;
+        --selected-row: #3a3815;
+
+        --button-fg: #f1efd6;
+        --button-bg: #636130;
+        --button-hover-bg: #7a7840;
+        --default-button-bg: #636130;
+        --default-button-hover-bg: #7a7840;
+        --close-button-bg: #5a5942;
+        --close-button-hover-bg: #77765a;
+
+        --focus-ring: 0 0 0 3px rgba(216, 203, 104, 0.35);
+      }
     }
 
-    #branding h1, #branding h1 a:link, #branding h1 a:visited {
-        color: #fff;
+    html[data-theme="dark"] {
+      --primary: #4a4824;
+      --secondary: #353204;
+      --accent: #d8cb68;
+      --primary-fg: #f1efd6;
+
+      --body-fg: #e4e2c8;
+      --body-bg: #16160a;
+      --body-quiet-color: #a9a78a;
+      --body-loud-color: #fff;
+
+      --header-color: #e4e0b0;
+      --header-branding-color: var(--accent);
+      --header-bg: var(--secondary);
+      --header-link-color: var(--primary-fg);
+
+      --breadcrumbs-fg: #c9c691;
+      --breadcrumbs-link-fg: var(--body-loud-color);
+      --breadcrumbs-bg: #2a2910;
+
+      --link-fg: #cfc983;
+      --link-hover-color: #f0eaa5;
+      --link-selected-fg: #e3d77a;
+
+      --hairline-color: #2f2e17;
+      --border-color: #46441f;
+
+      --message-success-bg: #2c3a14;
+      --message-warning-bg: #3d3711;
+      --message-error-bg: #3f1d18;
+
+      --darkened-bg: #1e1e0e;
+      --selected-bg: #2f2e17;
+      --selected-row: #3a3815;
+
+      --button-fg: #f1efd6;
+      --button-bg: #636130;
+      --button-hover-bg: #7a7840;
+      --default-button-bg: #636130;
+      --default-button-hover-bg: #7a7840;
+      --close-button-bg: #5a5942;
+      --close-button-hover-bg: #77765a;
+
+      --focus-ring: 0 0 0 3px rgba(216, 203, 104, 0.35);
     }
 
+    /* --------------------------------------------------------------------------
+       3. Cabeçalho e navegação
+       -------------------------------------------------------------------------- */
     #header {
-        background: #636130;
-        color: #fff;
+      background: var(--header-bg);
+      color: var(--header-color);
+      border-bottom: 3px solid var(--primary);
     }
-    #header a:link, #header a:visited {
-        color: #fff;
+
+    #branding h1,
+    #branding h1 a:link,
+    #branding h1 a:visited {
+      color: var(--header-branding-color);
     }
-    #header a:hover {
-        color: #fff;
+
+    #user-tools,
+    #user-tools a,
+    div.breadcrumbs,
+    div.breadcrumbs a {
+      letter-spacing: 0.02em;
+    }
+
+    #user-tools a {
+      border-bottom-color: rgba(255, 255, 255, 0.35);
+    }
+
+    #user-tools a:focus,
+    #user-tools a:hover {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
     }
 
     div.breadcrumbs {
-        background: #353204;
-        color: #c4dce8;
+      background: var(--breadcrumbs-bg);
+      color: var(--breadcrumbs-fg);
     }
 
-    div.breadcrumbs a.active {
-        color: #c4dce8 !important;
-        font-weight: 300;
+    div.breadcrumbs a:focus,
+    div.breadcrumbs a:hover {
+      color: var(--accent);
     }
 
-    div.breadcrumbs a:focus, div.breadcrumbs a:hover {
-        color: #c4dce8 !important;
-        font-weight: 300;
+    /* --------------------------------------------------------------------------
+       4. Links
+       -------------------------------------------------------------------------- */
+    a:link,
+    a:visited {
+      color: var(--link-fg);
     }
 
-    .select2-container--admin-autocomplete .select2-results__option--highlighted[aria-selected] {
-        background-color: #292D32;
+    a:focus,
+    a:hover {
+      color: var(--link-hover-color);
     }
 
-    .paginator a:link, .paginator a:visited {
-        background: #292D32;
+    a.section:link,
+    a.section:visited {
+      color: var(--primary-fg);
     }
 
-    .button, input[type=submit], input[type=button], .submit-row input, a.button {
-        background: #353204;
-    }
-    .button:hover, input[type=submit]:hover, input[type=button]:hover {
-        background: #878787;
-    }
-
-    .module h2, .module caption, .inline-group h2 {
-        background: #353204;
-    }
-    #user-tools a:focus, #user-tools a:hover {
-        border: 0;
-        color: #ddd;
+    /* --------------------------------------------------------------------------
+       5. Módulos, títulos de seção e tabelas
+       -------------------------------------------------------------------------- */
+    .module h2,
+    .module caption,
+    .inline-group h2 {
+      background: var(--primary);
+      color: var(--primary-fg);
     }
 
-    .selector-chosen h2 {
-        background: #353204 !important;
+    .module h3 {
+      color: var(--primary);
     }
 
-    .calendar td.selected a {
-        background: #353204 !important;
+    .module {
+      border-color: var(--hairline-color);
     }
 
-    .calendar td a:focus, .timelist a:focus,
-    .calendar td a:hover, .timelist a:hover {
-        background: #353204 !important;
+    .colM .module > h2 a,
+    .module h2 a:link,
+    .module h2 a:visited {
+      color: var(--primary-fg);
     }
 
-    #changelist-filter li.selected a {
-        color: #444;
-    }
-
-    fieldset.collapsed .collapse-toggle {
-        color: #444;
-    }
-
-    a:link, a:visited {
-        color: #777;
-    }
-
-    a:focus, a:hover {
-        color: #999;
-    }
-
-    table thead th.sorted .sortoptions a.sortremove:focus:after,
-    table thead th.sorted .sortoptions a.sortremove:hover:after {
-        color: #444;
-    }
-
-    a.active.selector-chooseall:focus, a.active.selector-clearall:focus,
-    a.active.selector-chooseall:hover, a.active.selector-clearall:hover {
-        color: #999;
-    }
-
-    .calendar td a:active, .timelist a:active {
-        background: #292D32;
-        color: white;
-    }
-
-    .calendar caption, .calendarbox h2 {
-        background: #999;
-    }
-
-    .button.default, input[type=submit].default, .submit-row input.default {
-        background: #636130;
-    }
-
-    .button.default:hover, input[type=submit].default:hover {
-        background: #191D22;
-    }
-
-    .object-tools a:focus, .object-tools a:hover {
-        background-color: #292D32;
-    }
-
-    input[type=file]::-webkit-file-upload-button:hover {
-        border: 0;
-        background: #292D32;
-    }
-
+    #content-related .module,
     #changelist-filter {
-        right: 15px;
+      background: var(--darkened-bg);
+      border-color: var(--hairline-color);
+    }
+
+    thead th,
+    .module th,
+    table thead th {
+      border-bottom-color: var(--primary);
+    }
+
+    thead th a:link,
+    thead th a:visited {
+      color: var(--body-quiet-color);
+    }
+
+    thead th.sorted {
+      background: var(--selected-bg);
+    }
+
+    thead th.sorted .text a,
+    thead th a:hover {
+      color: var(--primary);
+    }
+
+    tr:nth-child(even) td,
+    tr:nth-child(even) th {
+      background-color: var(--darkened-bg);
+    }
+
+    tr.selected td,
+    tr.selected th,
+    tr.selected {
+      background-color: var(--selected-row);
+    }
+
+    tbody tr:hover td,
+    tbody tr:hover th {
+      background-color: var(--selected-bg);
+    }
+
+    fieldset.collapsed {
+      border-color: var(--hairline-color);
+    }
+
+    .module.aligned .form-row {
+      border-bottom-color: var(--hairline-color);
+    }
+
+    /* --------------------------------------------------------------------------
+       6. Barra de ações, paginação e filtros
+       -------------------------------------------------------------------------- */
+    #changelist .actions {
+      background: var(--darkened-bg);
+      border-top-color: var(--hairline-color);
+      border-bottom-color: var(--hairline-color);
+    }
+
+    #changelist .actions .button {
+      border-color: var(--border-color);
+    }
+
+    #changelist .actions .button:hover {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: var(--primary-fg);
+    }
+
+    .paginator a:link,
+    .paginator a:visited {
+      background: var(--primary);
+      color: var(--primary-fg);
+    }
+
+    .paginator a:focus,
+    .paginator a:hover {
+      background: var(--secondary);
+      color: var(--primary-fg);
+    }
+
+    .paginator .this-page {
+      background: var(--secondary);
+      color: var(--primary-fg);
     }
 
     #changelist-filter h2 {
-        padding-top: 0px;
-        padding-bottom: 0px;
+      background: var(--primary);
+      color: var(--primary-fg);
+    }
+
+    #changelist-filter li.selected a {
+      color: var(--link-selected-fg);
+      font-weight: 600;
+      border-left: 3px solid var(--primary);
+      padding-left: 6px;
+      margin-left: -9px;
+    }
+
+    #changelist-filter a:focus,
+    #changelist-filter a:hover {
+      color: var(--link-hover-color);
+    }
+
+    /* --------------------------------------------------------------------------
+       7. Botões
+       -------------------------------------------------------------------------- */
+    .button,
+    input[type="submit"],
+    input[type="button"],
+    .submit-row input,
+    a.button {
+      background: var(--button-bg);
+      color: var(--button-fg);
+    }
+
+    .button:active,
+    .button:focus,
+    .button:hover,
+    input[type="submit"]:active,
+    input[type="submit"]:focus,
+    input[type="submit"]:hover,
+    input[type="button"]:active,
+    input[type="button"]:focus,
+    input[type="button"]:hover {
+      background: var(--button-hover-bg);
+    }
+
+    .button.default,
+    input[type="submit"].default,
+    .submit-row input.default {
+      background: var(--default-button-bg);
+      color: var(--button-fg);
+    }
+
+    .button.default:active,
+    .button.default:focus,
+    .button.default:hover,
+    input[type="submit"].default:active,
+    input[type="submit"].default:focus,
+    input[type="submit"].default:hover {
+      background: var(--default-button-hover-bg);
+    }
+
+    .submit-row {
+      background: var(--darkened-bg);
+      border-color: var(--hairline-color);
+    }
+
+    .submit-row a.deletelink:link,
+    .submit-row a.deletelink:visited,
+    a.deletelink:link,
+    a.deletelink:visited {
+      background: var(--delete-button-bg);
+      color: #fff;
+    }
+
+    .submit-row a.deletelink:focus,
+    .submit-row a.deletelink:hover,
+    a.deletelink:focus,
+    a.deletelink:hover {
+      background: var(--delete-button-hover-bg);
+    }
+
+    a.closelink,
+    .submit-row a.closelink {
+      background: var(--close-button-bg);
+      color: #fff;
+    }
+
+    a.closelink:hover,
+    .submit-row a.closelink:hover {
+      background: var(--close-button-hover-bg);
+    }
+
+    .object-tools a:link,
+    .object-tools a:visited {
+      background: var(--primary);
+      color: var(--primary-fg);
+    }
+
+    .object-tools a:focus,
+    .object-tools a:hover {
+      background: var(--secondary);
+    }
+
+    /* --------------------------------------------------------------------------
+       8. Campos de formulário
+       -------------------------------------------------------------------------- */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="url"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="search"],
+    input[type="date"],
+    input[type="time"],
+    textarea,
+    select,
+    .vTextField {
+      border-color: var(--border-color);
+      background-color: var(--body-bg);
+      color: var(--body-fg);
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="email"]:focus,
+    input[type="url"]:focus,
+    input[type="number"]:focus,
+    input[type="tel"]:focus,
+    input[type="search"]:focus,
+    input[type="date"]:focus,
+    input[type="time"]:focus,
+    textarea:focus,
+    select:focus,
+    .vTextField:focus {
+      border-color: var(--primary);
+      box-shadow: var(--focus-ring);
+      outline: none;
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+      accent-color: var(--primary);
+    }
+
+    a:focus-visible,
+    button:focus-visible,
+    .button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .help,
+    form .help,
+    .helptext {
+      color: var(--body-quiet-color);
+    }
+
+    /* --------------------------------------------------------------------------
+       9. Mensagens
+       -------------------------------------------------------------------------- */
+    ul.messagelist li {
+      background-color: var(--message-success-bg);
+      color: var(--body-fg);
+      border-left: 4px solid var(--primary);
+    }
+
+    ul.messagelist li.warning {
+      background-color: var(--message-warning-bg);
+      border-left-color: #b39b17;
+    }
+
+    ul.messagelist li.error {
+      background-color: var(--message-error-bg);
+      border-left-color: var(--error-fg);
+    }
+
+    /* --------------------------------------------------------------------------
+       10. Widgets (filter_horizontal, calendário, autocomplete)
+       -------------------------------------------------------------------------- */
+    .selector-chosen h2 {
+      background: var(--primary);
+      color: var(--primary-fg);
+    }
+
+    .selector-available h2 {
+      background: var(--secondary);
+      color: var(--primary-fg);
+    }
+
+    .selector .selector-filter {
+      border-color: var(--border-color);
+    }
+
+    .calendar caption,
+    .calendarbox h2 {
+      background: var(--primary) !important;
+      color: var(--primary-fg) !important;
+    }
+
+    .calendar td.selected a {
+      background: var(--primary);
+      color: var(--primary-fg);
+    }
+
+    .calendar td a:focus,
+    .calendar td a:hover {
+      background: var(--secondary);
+      color: var(--primary-fg);
+    }
+
+    .calendar-shortcuts a:link,
+    .calendar-shortcuts a:visited,
+    .timelist a {
+      color: var(--link-fg);
+    }
+
+    .select2-container--admin-autocomplete .select2-results__option--highlighted[aria-selected],
+    .select2-container--admin-autocomplete .select2-results__option--highlighted.select2-results__option--selectable {
+      background-color: var(--primary);
+      color: var(--primary-fg);
+    }
+
+    .select2-container--admin-autocomplete.select2-container--focus .select2-selection,
+    .select2-container--admin-autocomplete.select2-container--open .select2-selection {
+      border-color: var(--primary);
+    }
+
+    .select2-container--admin-autocomplete .select2-selection--multiple .select2-selection__choice {
+      background-color: var(--selected-bg);
+      border-color: var(--border-color);
+      color: var(--body-fg);
+    }
+
+    /* --------------------------------------------------------------------------
+       11. Menu lateral (nav sidebar do Django 3.1+)
+       -------------------------------------------------------------------------- */
+    #nav-sidebar {
+      background: var(--darkened-bg);
+      border-right-color: var(--hairline-color);
+    }
+
+    #nav-sidebar .current-app .section:link,
+    #nav-sidebar .current-app .section:visited {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    #nav-sidebar .current-model {
+      background: var(--selected-row);
+    }
+
+    .toggle-nav-sidebar {
+      background: var(--darkened-bg);
+      border-color: var(--hairline-color);
+      color: var(--primary);
+    }
+
+    .toggle-nav-sidebar:hover,
+    .toggle-nav-sidebar:focus {
+      background: var(--selected-bg);
+    }
+
+    /* --------------------------------------------------------------------------
+       12. Tela de login
+       -------------------------------------------------------------------------- */
+    body.login {
+      background: var(--darkened-bg);
+    }
+
+    .login #header {
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .login #container {
+      border-color: var(--hairline-color);
+    }
+
+    .login .submit-row input {
+      background: var(--secondary);
+    }
+
+    .login .submit-row input:hover,
+    .login .submit-row input:focus {
+      background: var(--primary);
+    }
+
+    /* --------------------------------------------------------------------------
+       13. Seleção de texto e barra de rolagem
+       -------------------------------------------------------------------------- */
+    ::selection {
+      background: rgba(99, 97, 48, 0.28);
+    }
+
+    * {
+      scrollbar-color: var(--primary) var(--darkened-bg);
     }
 </style>
 {% endblock %}
