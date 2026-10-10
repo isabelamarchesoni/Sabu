@@ -6,30 +6,30 @@ from orders.models import Pedido
 
 
 class MateriaPrima(models.Model):
-    id_materia_prima = models.BigAutoField(primary_key=True, db_column='id_materia_prima')
-    nm_materia_prima = models.CharField(max_length=100, unique=True, db_column='nm_materia_prima')
-    sg_unidade_medida = models.CharField(max_length=10, db_column='sg_unidade_medida')
-    qtd_estoque = models.DecimalField(max_digits=10, decimal_places=3, db_column='qtd_estoque')
-    vl_custo_unitario = models.DecimalField(max_digits=10, decimal_places=4, db_column='vl_custo_unitario')
+    id = models.BigAutoField(primary_key=True)
+    nome = models.CharField(max_length=100, unique=True)
+    unidade_medida = models.CharField(max_length=10)
+    quantidade_estoque = models.DecimalField(max_digits=10, decimal_places=3)
+    valor_custo_unitario = models.DecimalField(max_digits=10, decimal_places=4)
 
     class Meta:
         db_table = 'materia_prima'
 
     def __str__(self):
-        return self.nm_materia_prima
+        return self.nome
 
 
 class FichaTecnica(models.Model):
-    id_ficha = models.BigAutoField(primary_key=True, db_column='id_ficha')
-    id_variacao = models.ForeignKey(ProdutoVariacao, on_delete=models.CASCADE, db_column='id_variacao', related_name='fichas_tecnicas')
-    id_materia_prima = models.ForeignKey(MateriaPrima, on_delete=models.RESTRICT, db_column='id_materia_prima', related_name='fichas_tecnicas')
-    qtd_necessaria = models.DecimalField(max_digits=10, decimal_places=3, db_column='qtd_necessaria')
+    id = models.BigAutoField(primary_key=True)
+    variacao = models.ForeignKey(ProdutoVariacao, on_delete=models.CASCADE, related_name='fichas_tecnicas')
+    materia_prima = models.ForeignKey(MateriaPrima, on_delete=models.RESTRICT)
+    quantidade_necessaria = models.DecimalField(max_digits=10, decimal_places=3)
 
     class Meta:
         db_table = 'ficha_tecnica'
         constraints = [
             models.UniqueConstraint(
-                fields=['id_variacao', 'id_materia_prima'],
+                fields=['variacao', 'materia_prima'],
                 name='uq_ficha_variacao_materia',
             ),
         ]
@@ -42,17 +42,17 @@ class MovimentacaoEstoque(models.Model):
         ('AJUSTE_PERDA', 'Ajuste / Perda'),
     )
 
-    id_movimentacao = models.BigAutoField(primary_key=True, db_column='id_movimentacao')
-    id_variacao = models.ForeignKey(ProdutoVariacao, on_delete=models.RESTRICT, db_column='id_variacao', related_name='movimentacoes')
-    id_usuario_responsavel = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, db_column='id_usuario_responsavel', related_name='movimentacoes')
-    id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True, db_column='id_pedido', related_name='movimentacoes')
-    tp_movimentacao = models.CharField(max_length=20, choices=TIPO_CHOICES, db_column='tp_movimentacao')
-    qtd_movimentacao = models.IntegerField(db_column='qtd_movimentacao')
-    ds_observacao = models.TextField(blank=True, null=True, db_column='ds_observacao')
-    dt_movimentacao = models.DateTimeField(auto_now_add=True, db_column='dt_movimentacao')
+    id = models.BigAutoField(primary_key=True)
+    variacao = models.ForeignKey(ProdutoVariacao, on_delete=models.RESTRICT, related_name='movimentacoes')
+    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='movimentacoes')
+    pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True, related_name='movimentacoes')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    quantidade_movimentada = models.IntegerField()
+    observacao = models.TextField(blank=True, null=True)
+    movimentado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'movimentacao_estoque'
 
     def __str__(self):
-        return f"{self.tp_movimentacao} - Variacao ID: {self.id_variacao_id} ({self.qtd_movimentacao})"
+        return f"{self.tipo} - Variacao ID: {self.variacao} ({self.quantidade_movimentada})"
