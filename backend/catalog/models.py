@@ -68,7 +68,7 @@ class ProdutoTipoPele(models.Model):
 
 class ProdutoVariacao(models.Model):
     id = models.BigAutoField(primary_key=True)
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='variacoes')
+    produto = models.ForeignKey(Produto, on_delete=models.PROTECT, related_name='variacoes')
     sku = models.CharField(max_length=50, unique=True)
     nome = models.CharField(max_length=50)
     preco = models.DecimalField(max_digits=10, decimal_places=2)
@@ -77,6 +77,7 @@ class ProdutoVariacao(models.Model):
     fim_promo = models.DateTimeField(blank=True, null=True)
     peso_gramas = models.IntegerField(blank=True, null=True)
     quantidade_estoque = models.IntegerField()
+    apagado_em = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = 'produto_variacao'
