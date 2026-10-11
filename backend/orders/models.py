@@ -36,7 +36,7 @@ class Pedido(models.Model):
 
 class PedidoItem(models.Model):
     id = models.BigAutoField(primary_key=True)
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
+    pedido = models.ForeignKey(Pedido, on_delete=models.PROTECT)
     variacao = models.ForeignKey(ProdutoVariacao, on_delete=models.PROTECT)
     quantidade_item = models.IntegerField()
     valor_unitario = models.DecimalField(max_digits=10, decimal_places=2)
