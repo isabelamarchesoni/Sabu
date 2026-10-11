@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import viewsets
 
 from accounts.mixins import PublicReadAdminWriteViewSetMixin
@@ -65,8 +66,18 @@ class ProdutoVariacaoViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelVie
             return ProdutoVariacaoSerializer
         return ProdutoVariacaoUpdateSerializer
 
+    def perform_destroy(self, instance):
+        instance.apagado_em = timezone.now()
+        instance.save(update_fields=['apagado_em'])
+
     def get_queryset(self):
         queryset = ProdutoVariacao.objects.all()
+
+        user = self.request.user
+        is_admin = user.is_authenticated and getattr(user, 'cargo', None) == 'ADMIN'
+        if not is_admin:
+            queryset = queryset.filter(apagado_em__isnull=True)
+
         produto_id = self.request.query_params.get('produto_id')
         if produto_id:
             queryset = queryset.filter(produto=produto_id)
