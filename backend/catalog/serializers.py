@@ -29,8 +29,9 @@ class ProdutoVariacaoSerializer(serializers.ModelSerializer):
             'fim_promo',
             'peso_gramas',
             'quantidade_estoque',
+            'apagado_em',
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'apagado_em']
 
     def create(self, validated_data):
         validated_data['quantidade_estoque'] = 0
@@ -40,7 +41,7 @@ class ProdutoVariacaoSerializer(serializers.ModelSerializer):
 
 class ProdutoVariacaoUpdateSerializer(ProdutoVariacaoSerializer):
     class Meta(ProdutoVariacaoSerializer.Meta):
-        read_only_fields = ['id', 'quantidade_estoque']
+        read_only_fields = ['id', 'apagado_em', 'quantidade_estoque']
 
 
 class ProdutoSerializer(serializers.ModelSerializer):
