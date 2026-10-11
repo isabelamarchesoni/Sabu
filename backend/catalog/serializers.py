@@ -32,6 +32,12 @@ class ProdutoVariacaoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
+    def create(self, validated_data):
+        validated_data['quantidade_estoque'] = 0
+
+        variacao = super().create(validated_data)
+        return variacao
+
 class ProdutoVariacaoUpdateSerializer(ProdutoVariacaoSerializer):
     class Meta(ProdutoVariacaoSerializer.Meta):
         read_only_fields = ['id', 'quantidade_estoque']
