@@ -24,7 +24,7 @@ class Pedido(models.Model):
     valor_total = models.DecimalField(max_digits=10, decimal_places=2)
     valor_frete = models.DecimalField(max_digits=10, decimal_places=2)
     criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
     itens = models.ManyToManyField(ProdutoVariacao, through='PedidoItem', related_name='pedidos')
 
     class Meta:
