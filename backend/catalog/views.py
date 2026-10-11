@@ -41,7 +41,7 @@ class ProdutoViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelViewSet):
         )
 
         user = self.request.user
-        is_admin = user.is_authenticated and getattr(user, 'tp_cargo', None) == 'ADMIN'
+        is_admin = user.is_authenticated and getattr(user, 'cargo', None) == 'ADMIN'
         if not is_admin:
             queryset = queryset.filter(esta_ativo=True)
 
