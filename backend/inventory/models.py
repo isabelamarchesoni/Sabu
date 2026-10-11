@@ -43,9 +43,9 @@ class MovimentacaoEstoque(models.Model):
     )
 
     id = models.BigAutoField(primary_key=True)
-    variacao = models.ForeignKey(ProdutoVariacao, on_delete=models.RESTRICT, related_name='movimentacoes')
+    variacao = models.ForeignKey(ProdutoVariacao, on_delete=models.PROTECT, related_name='movimentacoes')
     usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='movimentacoes')
-    pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True, related_name='movimentacoes')
+    pedido = models.ForeignKey(Pedido, on_delete=models.PROTECT, null=True, related_name='movimentacoes')
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
     quantidade_movimentada = models.IntegerField()
     observacao = models.TextField(blank=True, null=True)
