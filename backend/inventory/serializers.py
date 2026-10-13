@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import MateriaPrima, FichaTecnica, MovimentacaoEstoque
+
+from .exceptions import EstoqueInsuficiente
+from .models import MateriaPrima, FichaTecnica, MovimentacaoEstoque, TIPOS_COM_PEDIDO
+from .services import registrar_movimentacao
 
 
 class MateriaPrimaSerializer(serializers.ModelSerializer):
@@ -20,11 +23,9 @@ class FichaTecnicaSerializer(serializers.ModelSerializer):
         model = FichaTecnica
         fields = ['id', 'variacao', 'materia_prima', 'quantidade_necessaria']
         read_only_fields = ['id']
-
-    def validate_quantidade_necessaria(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("A quantidade necessária deve ser maior que zero.")
-        return value
+        extra_kwargs = {
+            'quantidade_necessaria': {'min_value': 1}
+        }
 
 
 class FichaTecnicaDetalhadaSerializer(FichaTecnicaSerializer):
@@ -52,32 +53,25 @@ class MovimentacaoEstoqueSerializer(serializers.ModelSerializer):
             'movimentado_em',
         ]
         read_only_fields = ['id', 'usuario', 'pedido', 'movimentado_em']
+        extra_kwargs = {
+            'quantidade_movimentada': {'min_value': 1}
+        }
 
-    def validate_quantidade_movimentada(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("A quantidade da movimentação deve ser maior que zero.")
+    def validate_tipo(self, value):
+        if value in TIPOS_COM_PEDIDO:
+            raise serializers.ValidationError('Este tipo é gerado automaticamente pelo pedido.')
         return value
 
     def create(self, validated_data):
-        request = self.context.get('request')
-        usuario = request.user
-
-        validated_data['usuario'] = usuario
-
-        # Cria o registro de movimentação no banco
-        movimentacao = super().create(validated_data)
-        variacao = movimentacao.variacao
-
-        # Atualiza a quantidade do estoque da ProdutoVariacao vinculada
-        if movimentacao.tipo == 'ENTRADA':
-            variacao.quantidade_estoque += movimentacao.quantidade_movimentada
-        elif movimentacao.tipo in ['SAIDA_VENDA', 'AJUSTE_PERDA']:
-            # Garante que o estoque não fique negativo involuntariamente
-            if variacao.quantidade_estoque < movimentacao.quantidade_movimentada:
-                raise serializers.ValidationError({
-                    "quantidade_movimentada": f"Estoque insuficiente. Saldo atual: {variacao.quantidade_estoque}"
-                })
-            variacao.quantidade_estoque -= movimentacao.quantidade_movimentada
-
-        variacao.save()
-        return movimentacao
+        try:
+            return registrar_movimentacao(
+                variacao_id=validated_data['variacao'].pk,
+                tipo=validated_data['tipo'],
+                quantidade=validated_data['quantidade_movimentada'],
+                usuario=self.context['request'].user,
+                observacao=validated_data.get('observacao'),
+            )
+        except EstoqueInsuficiente as e:
+            raise serializers.ValidationError(
+                {'quantidade_movimentada': f'Estoque insuficiente. Saldo atual: {e.saldo}'}
+            )
