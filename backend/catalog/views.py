@@ -79,7 +79,20 @@ class ProdutoVariacaoViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelVie
 
         produto_id = self.request.query_params.get('produto_id')
         if produto_id:
-            queryset = queryset.filter(produto=produto_id)
-        return queryset
             qs = qs.filter(produto=produto_id)
         return qs
+
+    @action(detail=True, methods=['patch'], url_path='restaurar')
+    def restaurar(self, request, pk=None):
+        variacao = self.get_object()
+
+        if variacao.apagado_em is None:
+            return Response(
+                {'detail': 'Esta variação não está apagada.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        variacao.apagado_em = None
+        variacao.save(update_fields=['apagado_em'])
+
+        return Response(ProdutoVariacaoSerializer(variacao).data, status=status.HTTP_200_OK)
