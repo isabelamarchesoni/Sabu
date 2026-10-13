@@ -69,17 +69,22 @@ class UsuarioCadastroSerializer(serializers.ModelSerializer):
 
     def validate_cpf_cnpj(self, value):
         if not value:
-            return value
+            return None
 
-        cpf = CPF()
-        cnpj = CNPJ()
+        limpo = re.sub(r'[^0-9A-Za-z]', '', value).upper()
 
-        if not cpf.validate(value) and not cnpj.validate(value):
-            raise serializers.ValidationError("CPF ou CNPJ inválido.")
+        if len(limpo) == 11:
+            if not limpo.isdigit() or not CPF().validate(limpo):
+                raise serializers.ValidationError('CPF inválido.')
+        elif len(limpo) == 14:
+            if not CNPJ().validate(limpo):
+                raise serializers.ValidationError('CNPJ inválido.')
+        else:
+            raise serializers.ValidationError(
+                'Informe um CPF (11 caracteres) ou um CNPJ (14 caracteres).'
+            )
 
-        value_regex = re.sub(r'[^a-zA-Z0-9]', '', value)
-
-        return value_regex
+        return limpo
 
     def create(self, validated_data):
         senha = validated_data.pop('senha')
