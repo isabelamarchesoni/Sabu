@@ -63,3 +63,5 @@ coverage/
 # generated native folders
 /ios
 /android
+
+eas.json
