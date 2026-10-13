@@ -1,5 +1,7 @@
 from django.utils import timezone
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from accounts.mixins import PublicReadAdminWriteViewSetMixin
 from .models import Categoria, Produto, ProdutoVariacao, TipoPele
@@ -35,26 +37,23 @@ class ProdutoViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelViewSet):
         return ProdutoSerializer
 
     def get_queryset(self):
-        queryset = (
-            Produto.objects
-            .prefetch_related('categorias', 'variacoes', 'tipo_pele')
-            .order_by('nome')
-        )
+        qs = (super().get_queryset()
+              .prefetch_related('categorias', 'variacoes', 'tipo_pele')
+              .order_by('nome'))
 
         user = self.request.user
         is_admin = user.is_authenticated and getattr(user, 'cargo', None) == 'ADMIN'
         if not is_admin:
-            queryset = queryset.filter(esta_ativo=True)
+            qs = qs.filter(esta_ativo=True)
 
         categoria_id = self.request.query_params.get('categoria_id')
         if categoria_id:
-            queryset = queryset.filter(categorias__id=categoria_id).distinct()
+            qs = qs.filter(categorias__id=categoria_id).distinct()
 
         tipo_pele_id = self.request.query_params.get('tipo_pele_id')
         if tipo_pele_id:
-            queryset = queryset.filter(tipo_pele__id=tipo_pele_id).distinct()
-
-        return queryset
+            qs = qs.filter(tipo_pele__id=tipo_pele_id).distinct()
+        return qs
 
 
 class ProdutoVariacaoViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelViewSet):
@@ -71,14 +70,16 @@ class ProdutoVariacaoViewSet(PublicReadAdminWriteViewSetMixin, viewsets.ModelVie
         instance.save(update_fields=['apagado_em'])
 
     def get_queryset(self):
-        queryset = ProdutoVariacao.objects.all()
+        qs = (super().get_queryset())
 
         user = self.request.user
         is_admin = user.is_authenticated and getattr(user, 'cargo', None) == 'ADMIN'
         if not is_admin:
-            queryset = queryset.filter(apagado_em__isnull=True)
+            qs = qs.filter(produto__esta_ativo=True).filter(apagado_em__isnull=True)
 
         produto_id = self.request.query_params.get('produto_id')
         if produto_id:
             queryset = queryset.filter(produto=produto_id)
         return queryset
+            qs = qs.filter(produto=produto_id)
+        return qs
