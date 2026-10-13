@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 from .models import Categoria, Produto, ProdutoVariacao, TipoPele
 
@@ -18,26 +20,40 @@ class TipoPeleSerializer(serializers.ModelSerializer):
 class ProdutoVariacaoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProdutoVariacao
-        fields = [
-            'id',
-            'produto',
-            'sku',
-            'nome',
-            'preco',
-            'preco_promo',
-            'inicio_promo',
-            'fim_promo',
-            'peso_gramas',
-            'quantidade_estoque',
-            'apagado_em',
-        ]
-        read_only_fields = ['id', 'apagado_em']
+        fields = ['id', 'produto', 'sku', 'nome', 'preco', 'preco_promo',
+                  'inicio_promo', 'fim_promo', 'peso_gramas',
+                  'quantidade_estoque', 'apagado_em']
+        read_only_fields = ['id', 'apagado_em', 'quantidade_estoque']
+        extra_kwargs = {
+            'preco': {'min_value': Decimal('0')},
+            'preco_promo': {'min_value': Decimal('0')},
+            'peso_gramas': {'min_value': 1},
+        }
 
-    def create(self, validated_data):
-        validated_data['quantidade_estoque'] = 0
+    def validate(self, attrs):
+        def valor(campo):
+            if campo in attrs:
+                return attrs[campo]
+            return getattr(self.instance, campo, None)
 
-        variacao = super().create(validated_data)
-        return variacao
+        preco = valor('preco')
+        promo = valor('preco_promo')
+        inicio = valor('inicio_promo')
+        fim = valor('fim_promo')
+
+        if promo is not None and preco is not None and promo >= preco:
+            raise serializers.ValidationError(
+                {'preco_promo': 'A promoção deve ser menor que o preço.'})
+
+        if inicio is not None and fim is not None and inicio >= fim:
+            raise serializers.ValidationError(
+                {'fim_promo': 'O fim deve ser posterior ao início.'})
+
+        if promo is not None and (inicio is None or fim is None):
+            raise serializers.ValidationError(
+                {'preco_promo': 'Informe o início e o fim da promoção.'})
+
+        return attrs
 
 class ProdutoVariacaoUpdateSerializer(ProdutoVariacaoSerializer):
     class Meta(ProdutoVariacaoSerializer.Meta):
