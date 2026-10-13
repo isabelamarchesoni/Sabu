@@ -215,6 +215,7 @@ sabu/
 | **Amanda Lima** | IA/Machine Learning |
 | **Thiago Monteiro** | Backend |
 | **Frank Oliveira** | IA/Machine Learning |
+| **Guilherme Cauã** | Backend (QA) |
 
 ---
 
