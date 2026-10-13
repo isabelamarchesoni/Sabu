@@ -75,8 +75,8 @@ class ProdutoVariacao(models.Model):
     preco_promo = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     inicio_promo = models.DateTimeField(blank=True, null=True)
     fim_promo = models.DateTimeField(blank=True, null=True)
-    peso_gramas = models.IntegerField(blank=True, null=True)
-    quantidade_estoque = models.IntegerField()
+    peso_gramas = models.PositiveIntegerField(blank=True, null=True)
+    quantidade_estoque = models.PositiveIntegerField(default=0, editable=False)
     apagado_em = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -86,6 +86,44 @@ class ProdutoVariacao(models.Model):
                 fields=['produto', 'nome'],
                 name='uq_produto_nome',
             ),
+            models.CheckConstraint(
+                condition=models.Q(peso_gramas__isnull=True) | models.Q(peso_gramas__gt=0),
+                name='ck_variacao_peso_positivo',
+            ),
+            models.CheckConstraint(
+                name='ck_variacao_preco_nao_negativo',
+                condition=models.Q(preco__gte=0)
+            ),
+            models.CheckConstraint(
+                name='ck_variacao_preco_promo_nulo_ou_nao_negativo',
+                condition=models.Q(preco_promo__isnull=True) |
+                models.Q(preco_promo__gte=0)
+            ),
+            models.CheckConstraint(
+                name='ck_variacao_preco_promo_menor_que_preco',
+                condition=(
+                        models.Q(preco_promo__isnull=True)
+                        | models.Q(preco_promo__lt=models.F('preco'))
+                ),
+            ),
+            models.CheckConstraint(
+                name='ck_variacao_promo_exige_periodo',
+                condition=(
+                        models.Q(preco_promo__isnull=True)
+                        | (
+                                models.Q(inicio_promo__isnull=False)
+                                & models.Q(fim_promo__isnull=False)
+                        )
+                ),
+            ),
+            models.CheckConstraint(
+                name='ck_variacao_inicio_promo_antes_do_fim',
+                condition=(
+                        models.Q(inicio_promo__isnull=True)
+                        | models.Q(fim_promo__isnull=True)
+                        | models.Q(inicio_promo__lt=models.F('fim_promo'))
+                ),
+            )
         ]
 
     def __str__(self):
