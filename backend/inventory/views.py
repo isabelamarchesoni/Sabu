@@ -18,7 +18,7 @@ class MateriaPrimaViewSet(AdminOnlyViewSetMixin, viewsets.ModelViewSet):
 
 class FichaTecnicaViewSet(AdminOnlyViewSetMixin, viewsets.ModelViewSet):
     """CRUD de ficha técnica por variação de produto (apenas admin)"""
-    queryset = FichaTecnica.objects.all()
+    queryset = FichaTecnica.objects.select_related('materia_prima')
 
     def get_serializer_class(self):
         if self.action in ('update', 'partial_update'):
@@ -28,11 +28,11 @@ class FichaTecnicaViewSet(AdminOnlyViewSetMixin, viewsets.ModelViewSet):
         return FichaTecnicaSerializer
 
     def get_queryset(self):
-        queryset = FichaTecnica.objects.select_related('materia_prima')
+        qs = super().get_queryset()
         variacao_id = self.request.query_params.get('variacao_id')
         if variacao_id:
-            queryset = queryset.filter(variacao=variacao_id)
-        return queryset
+            qs = qs.filter(variacao_id=variacao_id)
+        return qs
 
 
 class MovimentacaoEstoqueViewSet(AdminOnlyViewSetMixin,
@@ -41,12 +41,12 @@ class MovimentacaoEstoqueViewSet(AdminOnlyViewSetMixin,
                                  mixins.ListModelMixin,
                                  viewsets.GenericViewSet):
     """Histórico e registro de movimentações de estoque (apenas admin)"""
-    queryset = MovimentacaoEstoque.objects.all().order_by('-movimentado_em')
+    queryset = MovimentacaoEstoque.objects.all()
     serializer_class = MovimentacaoEstoqueSerializer
 
     def get_queryset(self):
-        queryset = MovimentacaoEstoque.objects.all().order_by('-movimentado_em')
+        qs = super().get_queryset().order_by('-movimentado_em')
         variacao_id = self.request.query_params.get('variacao_id')
         if variacao_id:
-            queryset = queryset.filter(variacao=variacao_id)
-        return queryset
+            qs = qs.filter(variacao_id=variacao_id)
+        return qs
