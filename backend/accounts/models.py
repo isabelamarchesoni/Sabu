@@ -28,7 +28,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     nome = models.CharField(max_length=100)
     email = models.EmailField(max_length=254, unique=True)
     # O campo 'ds_senha_hash' / 'password' e 'last_login' vêm automaticamente do AbstractBaseUser
-    telefone = models.CharField(max_length=20, blank=True, null=True)
+    telefone = models.CharField(max_length=20)
     cpf_cnpj = models.CharField(max_length=20, unique=True, blank=True, null=True)
     cargo = models.CharField(max_length=20, choices=CARGO_CHOICES)
     esta_ativo = models.BooleanField(default=True)
