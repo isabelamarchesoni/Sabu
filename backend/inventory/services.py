@@ -22,7 +22,7 @@ def registrar_movimentacao(*, variacao_id, tipo, quantidade, usuario,
     elif tipo in TIPOS_QUE_DIMINUEM:
         delta = -quantidade
     else:
-        raise TipoMovimentacaoInvalido(tipo)
+        raise TipoMovimentacaoInvalido(f'Tipo de movimentação inválido: {tipo}.')
 
     if (tipo in TIPOS_COM_PEDIDO) != (pedido is not None):
         raise MovimentacaoIncoerente(
@@ -33,8 +33,13 @@ def registrar_movimentacao(*, variacao_id, tipo, quantidade, usuario,
 
     novo_saldo = variacao.quantidade_estoque + delta
     if novo_saldo < 0:
-        raise EstoqueInsuficiente(saldo=variacao.quantidade_estoque,
-                                  solicitado=quantidade)
+        raise EstoqueInsuficiente(
+            variacao_id=variacao.pk,
+            sku=variacao.sku,
+            produto=variacao.nome,
+            saldo=variacao.quantidade_estoque,
+            solicitado=quantidade,
+        )
 
     variacao.quantidade_estoque = novo_saldo
     variacao.save(update_fields=['quantidade_estoque'])

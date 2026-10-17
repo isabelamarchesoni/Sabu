@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import ProtectedError
+from django.http import Http404
 from rest_framework import exceptions as drf_exc
 from rest_framework.response import Response
 from rest_framework.views import exception_handler, set_rollback
@@ -18,6 +19,9 @@ def _resposta(status, code, detail, errors=None):
 def custom_exception_handler(exc, context):
     if isinstance(exc, ErroDeDominio):
         return _resposta(exc.status_code, exc.codigo, exc.mensagem, exc.detalhes or None)
+
+    if isinstance(exc, Http404):
+        return _resposta(404, 'not_found', 'Não encontrado.')
 
     if isinstance(exc, DjangoValidationError):
         errors = exc.message_dict if hasattr(exc, 'error_dict') else exc.messages

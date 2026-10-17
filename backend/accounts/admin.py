@@ -10,11 +10,8 @@ admin.site.site_title = "Administração"
 
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
-    list_filter = ("is_staff", "is_superuser")
-
     ordering = ("email",)
 
-    readonly_fields = ["criado_em", "last_login"]
     list_display = [
         "nome",
         "email",
@@ -26,6 +23,11 @@ class UsuarioAdmin(UserAdmin):
         "is_superuser",
         "criado_em",
     ]
+    list_filter = ("cargo", "esta_ativo", "is_staff", "is_superuser")
+
+    search_fields = ("nome", "email", "telefone", "cpf_cnpj")
+
+    readonly_fields = ["criado_em", "last_login"]
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
@@ -52,8 +54,16 @@ class UsuarioAdmin(UserAdmin):
         (
             None,
             {
-                "classes": ("collapse",),
-                "fields": ("email", "password", "nome", "cargo"),
+                "classes": ("wide",),
+                "fields": (
+                    "email",
+                    "nome",
+                    "telefone",
+                    "cpf_cnpj",
+                    "cargo",
+                    "password1",
+                    "password2",
+                ),
             },
         ),
     )

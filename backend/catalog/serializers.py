@@ -18,17 +18,26 @@ class TipoPeleSerializer(serializers.ModelSerializer):
 
 
 class ProdutoVariacaoSerializer(serializers.ModelSerializer):
+    produto_abstrato_esta_ativo = serializers.BooleanField(
+        source='produto.esta_ativo',
+        read_only=True,
+    )
+
     class Meta:
         model = ProdutoVariacao
         fields = ['id', 'produto', 'sku', 'nome', 'preco', 'preco_promo',
                   'inicio_promo', 'fim_promo', 'peso_gramas',
-                  'quantidade_estoque', 'apagado_em']
+                  'quantidade_estoque', 'apagado_em', 'produto_abstrato_esta_ativo']
         read_only_fields = ['id', 'apagado_em', 'quantidade_estoque']
         extra_kwargs = {
             'preco': {'min_value': Decimal('0')},
             'preco_promo': {'min_value': Decimal('0')},
             'peso_gramas': {'min_value': 1},
         }
+
+    def validate_sku(self, value):
+        sku_normalizado = value.strip().upper()
+        return sku_normalizado
 
     def validate(self, attrs):
         def valor(campo):
@@ -61,7 +70,6 @@ class ProdutoVariacaoUpdateSerializer(ProdutoVariacaoSerializer):
 
 
 class ProdutoSerializer(serializers.ModelSerializer):
-    # Aceita a lista de IDs de categorias no POST/PUT (ex: [1, 2])
     categorias = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.all(),
         many=True,
@@ -89,7 +97,6 @@ class ProdutoSerializer(serializers.ModelSerializer):
 
 
 class ProdutoDetalhadoSerializer(serializers.ModelSerializer):
-    # Retorna o objeto completo das categorias e as variações atreladas ao produto
     categorias = CategoriaSerializer(many=True, read_only=True)
     variacoes = ProdutoVariacaoSerializer(many=True, read_only=True)
     tipo_pele = TipoPeleSerializer(many=True, read_only=True)

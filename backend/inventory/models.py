@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 
 from accounts.models import Usuario
@@ -40,9 +42,10 @@ class MateriaPrima(models.Model):
 
 class FichaTecnica(models.Model):
     id = models.BigAutoField(primary_key=True)
-    variacao = models.ForeignKey(ProdutoVariacao, on_delete=models.CASCADE, related_name='fichas_tecnicas')
+    variacao = models.ForeignKey(ProdutoVariacao, on_delete=models.PROTECT, related_name='fichas_tecnicas')
     materia_prima = models.ForeignKey(MateriaPrima, on_delete=models.RESTRICT)
     quantidade_necessaria = models.DecimalField(max_digits=10, decimal_places=3)
+    apagada_em = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = 'ficha_tecnica'
@@ -51,6 +54,10 @@ class FichaTecnica(models.Model):
                 fields=['variacao', 'materia_prima'],
                 name='uq_ficha_variacao_materia',
             ),
+            models.CheckConstraint(
+                condition=models.Q(quantidade_necessaria__gte=Decimal('0.001')),
+                name='ck_quantidade_necessaria_positiva',
+            )
         ]
 
 class TipoMovimentacao(models.TextChoices):

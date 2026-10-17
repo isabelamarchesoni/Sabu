@@ -10,13 +10,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email'
 
     def validate(self, attrs):
-        # Executa a validação padrão do SimpleJWT (verifica e-mail e senha)
         data = super().validate(attrs)
 
         if not self.user.cargo:
             raise serializers.ValidationError("O conta do usuário não está ativa.")
 
-        # Adiciona as informações do usuário no JSON de resposta
+        if self.user.cargo != 'ADMIN':
+            raise serializers.ValidationError("Somente admins podem fazer login.")
+
         data['id'] = self.user.id
         data['nome'] = self.user.nome
         data['cargo'] = self.user.cargo
@@ -89,10 +90,9 @@ class UsuarioCadastroSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         senha = validated_data.pop('senha')
 
-        # Força o cargo como 'CLIENTE' no momento da criação
         usuario = Usuario.objects.create_user(
             password=senha,
-            cargo='CLIENTE',
+            cargo='ADMIN',
             **validated_data
         )
         return usuario

@@ -1,6 +1,8 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
-from .exceptions import EstoqueInsuficiente
+from core.mixins import VariacaoPorIdOuSkuMixin
 from .models import MateriaPrima, FichaTecnica, MovimentacaoEstoque, TIPOS_COM_PEDIDO
 from .services import registrar_movimentacao
 
@@ -21,10 +23,10 @@ class MateriaPrimaSerializer(serializers.ModelSerializer):
 class FichaTecnicaSerializer(serializers.ModelSerializer):
     class Meta:
         model = FichaTecnica
-        fields = ['id', 'variacao', 'materia_prima', 'quantidade_necessaria']
-        read_only_fields = ['id']
+        fields = ['id', 'variacao', 'materia_prima', 'quantidade_necessaria', 'apagada_em']
+        read_only_fields = ['id', 'apagada_em']
         extra_kwargs = {
-            'quantidade_necessaria': {'min_value': 1}
+            'quantidade_necessaria': {'min_value': Decimal('0.001')}
         }
 
 
@@ -36,15 +38,25 @@ class FichaTecnicaDetalhadaSerializer(FichaTecnicaSerializer):
 
 class FichaTecnicaUpdateSerializer(FichaTecnicaSerializer):
     class Meta(FichaTecnicaSerializer.Meta):
-        read_only_fields = ['id', 'variacao']
+        read_only_fields = ['id', 'variacao', 'apagada_em']
 
 
-class MovimentacaoEstoqueSerializer(serializers.ModelSerializer):
+class SkuRelatedField(serializers.SlugRelatedField):
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            data = data.strip().upper()
+        return super().to_internal_value(data)
+
+
+class MovimentacaoEstoqueSerializer(VariacaoPorIdOuSkuMixin, serializers.ModelSerializer):
     class Meta:
         model = MovimentacaoEstoque
         fields = [
             'id',
             'variacao',
+            'sku',
+            'variacao_nome',
+            'produto_nome',
             'usuario',
             'pedido',
             'tipo',
@@ -54,7 +66,7 @@ class MovimentacaoEstoqueSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'usuario', 'pedido', 'movimentado_em']
         extra_kwargs = {
-            'quantidade_movimentada': {'min_value': 1}
+            'quantidade_movimentada': {'min_value': 1, 'max_value': 100000}
         }
 
     def validate_tipo(self, value):
@@ -63,15 +75,10 @@ class MovimentacaoEstoqueSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        try:
-            return registrar_movimentacao(
-                variacao_id=validated_data['variacao'].pk,
-                tipo=validated_data['tipo'],
-                quantidade=validated_data['quantidade_movimentada'],
-                usuario=self.context['request'].user,
-                observacao=validated_data.get('observacao'),
-            )
-        except EstoqueInsuficiente as e:
-            raise serializers.ValidationError(
-                {'quantidade_movimentada': f'Estoque insuficiente. Saldo atual: {e.saldo}'}
-            )
+        return registrar_movimentacao(
+            variacao_id=validated_data['variacao'].pk,
+            tipo=validated_data['tipo'],
+            quantidade=validated_data['quantidade_movimentada'],
+            usuario=self.context['request'].user,
+            observacao=validated_data.get('observacao'),
+        )

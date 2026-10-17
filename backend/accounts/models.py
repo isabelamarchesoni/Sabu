@@ -20,7 +20,6 @@ class UsuarioManager(BaseUserManager):
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
     CARGO_CHOICES = (
-        ('CLIENTE', 'Cliente'),
         ('ADMIN', 'Administrador'),
     )
 
