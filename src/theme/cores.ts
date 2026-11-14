@@ -1,0 +1,43 @@
+export const temaClaro = {
+  fundo: '#E8DCC4',
+  superficie: '#F1E8D3',
+  campo: '#FBF8F2',
+  borda: '#CDBF9F',
+  texto: '#3B2F2A',
+  textoApoio: '#6B5C51',
+  placeholder: '#8A7A6B',
+  botao: '#5E7152',
+  botaoTexto: '#FFFFFF',
+  link: '#9A4A2C',
+  erro: '#B5452A',
+  folha: '#8FA36F',
+  folhaBorda: '#6B7F5E',
+  folhaVeia: '#7A8F5C',
+  petala: '#FBA8AB',
+  miolo: '#FFC94A',
+  splashFundo: '#5E7152',
+  splashTexto: '#F6EEDC',
+};
+
+export type Tema = typeof temaClaro;
+
+export const temaEscuro: Tema = {
+  fundo: '#1C241E',
+  superficie: '#28332B',
+  campo: '#26302A',
+  borda: '#3B493E',
+  texto: '#F1E9D8',
+  textoApoio: '#B9B29F',
+  placeholder: '#8E9686',
+  botao: '#A9BC8E',
+  botaoTexto: '#1C241E',
+  link: '#E9A98E',
+  erro: '#F08A6E',
+  folha: '#3F5A40',
+  folhaBorda: '#5C7A57',
+  folhaVeia: '#4E6B4C',
+  petala: '#E8A3A6',
+  miolo: '#E9C46A',
+  splashFundo: '#2A382C',
+  splashTexto: '#F1E9D8',
+};
