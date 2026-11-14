@@ -4,10 +4,10 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@types/react": "~19.2.4",
-    "expo": "~57.0.31",
+    "expo": "~57.0.33",
     "expo-constants": "~57.0.21",
-    "expo-linking": "~57.0.13",
-    "expo-router": "~57.0.29",
+    "expo-linking": "~57.0.14",
+    "expo-router": "~57.0.31",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
