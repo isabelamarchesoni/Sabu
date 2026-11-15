@@ -43,6 +43,12 @@ type FiltrosProdutos = {
   tipoPeleId?: number | null;
 };
 
+type FiltrosLista = {
+  pagina?: number;
+  busca?: string;
+  ordenacao?: string;
+};
+
 export async function listarProdutos(filtros: FiltrosProdutos): Promise<Paginado<Produto>> {
   return requisicao<Paginado<Produto>>('/catalog/produtos/', {
     autenticado: false,
@@ -62,6 +68,36 @@ export async function buscarProduto(id: number): Promise<Produto> {
 export async function listarCategorias(): Promise<Categoria[]> {
   const resposta = await requisicao<Paginado<Categoria>>('/catalog/categorias/', { autenticado: false });
   return resposta.results;
+}
+
+export async function listarCategoriasPaginadas(filtros: FiltrosLista): Promise<Paginado<Categoria>> {
+  return requisicao<Paginado<Categoria>>('/catalog/categorias/', {
+    parametros: {
+      page: filtros.pagina ?? 1,
+      search: filtros.busca,
+      ordering: filtros.ordenacao,
+    },
+  });
+}
+
+export async function buscarCategoria(id: number): Promise<Categoria> {
+  return requisicao<Categoria>(`/catalog/categorias/${id}/`);
+}
+
+export async function salvarCategoria(id: number | null, nome: string): Promise<Categoria> {
+  if (id === null) {
+    return requisicao<Categoria>('/catalog/categorias/', { metodo: 'POST', corpo: { nome: nome } });
+  }
+  return requisicao<Categoria>(`/catalog/categorias/${id}/`, { metodo: 'PUT', corpo: { nome: nome } });
+}
+
+export async function apagarCategoria(id: number) {
+  await requisicao<void>(`/catalog/categorias/${id}/`, { metodo: 'DELETE' });
+}
+
+export async function contarProdutosDaCategoria(id: number) {
+  const resposta = await requisicao<Paginado<Produto>>('/catalog/produtos/', { parametros: { categoria_id: id, page: 1 } });
+  return resposta.count;
 }
 
 export async function listarTiposPele(): Promise<TipoPele[]> {
