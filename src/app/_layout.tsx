@@ -1,3 +1,5 @@
+// layout raiz é obrigatório e vale para o app inteiro liga o tema (TemaProvider);
+// a barra de status e a pilha principal (Stack) com splash, login, vitrine e a área (admin).
 import { useContext } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';

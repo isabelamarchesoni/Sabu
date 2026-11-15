@@ -1,3 +1,6 @@
+// layout da área do administrador protege todas as telas dentro de (admin);
+// sem sessão salva, manda para o login;
+// também cria a pilha onde as listas e formulários abrem por cima das abas.
 import { useEffect, useState } from 'react';
 import { Stack, router } from 'expo-router';
 import { usuarioAtual } from '../../services/autenticacao';
