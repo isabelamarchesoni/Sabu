@@ -13,6 +13,8 @@ export default function Login() {
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const [erro, setErro] = useState('');
 
+  const opacidadeFolhas = modoEscuro ? 0.85 : 1;
+
   function entrar() {
     if (email.trim() === '' || senha === '') {
       setErro('Preencha o e-mail e a senha.');
@@ -24,12 +26,15 @@ export default function Login() {
 
   return (
     <KeyboardAvoidingView style={[styles.tela, { backgroundColor: cores.fundo }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.decoracao}>
-        <View style={[styles.folhaGrande, { opacity: modoEscuro ? 0.6 : 0.9 }]}>
-          <VitoriaRegia tamanho={300} cores={cores} />
+      <View style={[styles.decoracao, { opacity: opacidadeFolhas }]}>
+        <View style={styles.folhaTopo}>
+          <VitoriaRegia tamanho={190} cores={cores} mostrarFlor={false} giro={75} />
         </View>
-        <View style={[styles.folhaPequena, { opacity: modoEscuro ? 0.45 : 0.7 }]}>
-          <VitoriaRegia tamanho={140} cores={cores} mostrarFlor={false} />
+        <View style={styles.folhaGrande}>
+          <VitoriaRegia tamanho={300} cores={cores} mostrarFlor={false} giro={75} />
+        </View>
+        <View style={styles.folhaPequena}>
+          <VitoriaRegia tamanho={140} cores={cores} mostrarFlor={false} giro={75} />
         </View>
       </View>
 
@@ -44,7 +49,7 @@ export default function Login() {
       <ScrollView contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
         <View style={styles.cabecalho}>
           <View style={[styles.logo, { backgroundColor: cores.superficie, borderColor: cores.borda }]}>
-            <VitoriaRegia tamanho={54} cores={cores} corFundo={cores.superficie} />
+            <VitoriaRegia tamanho={54} cores={cores} corFundo={cores.superficie} mostrarFlor={false} sombra={false} />
           </View>
           <Text style={[styles.titulo, { color: cores.texto }]}>Bem-vinda de volta</Text>
           <Text style={[styles.subtitulo, { color: cores.textoApoio }]}>Entre para cuidar do seu estoque.</Text>
@@ -114,6 +119,11 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     pointerEvents: 'none',
+  },
+  folhaTopo: {
+    position: 'absolute',
+    top: -60,
+    left: -70,
   },
   folhaGrande: {
     position: 'absolute',
