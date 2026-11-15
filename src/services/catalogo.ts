@@ -104,3 +104,33 @@ export async function listarTiposPele(): Promise<TipoPele[]> {
   const resposta = await requisicao<Paginado<TipoPele>>('/catalog/tipo-pele/', { autenticado: false });
   return resposta.results;
 }
+
+export async function listarTiposPelePaginados(filtros: FiltrosLista): Promise<Paginado<TipoPele>> {
+  return requisicao<Paginado<TipoPele>>('/catalog/tipo-pele/', {
+    parametros: {
+      page: filtros.pagina ?? 1,
+      search: filtros.busca,
+      ordering: filtros.ordenacao,
+    },
+  });
+}
+
+export async function buscarTipoPele(id: number): Promise<TipoPele> {
+  return requisicao<TipoPele>(`/catalog/tipo-pele/${id}/`);
+}
+
+export async function salvarTipoPele(id: number | null, nome: string): Promise<TipoPele> {
+  if (id === null) {
+    return requisicao<TipoPele>('/catalog/tipo-pele/', { metodo: 'POST', corpo: { nome: nome } });
+  }
+  return requisicao<TipoPele>(`/catalog/tipo-pele/${id}/`, { metodo: 'PUT', corpo: { nome: nome } });
+}
+
+export async function apagarTipoPele(id: number) {
+  await requisicao<void>(`/catalog/tipo-pele/${id}/`, { metodo: 'DELETE' });
+}
+
+export async function contarProdutosDoTipoPele(id: number) {
+  const resposta = await requisicao<Paginado<Produto>>('/catalog/produtos/', { parametros: { tipo_pele_id: id, page: 1 } });
+  return resposta.count;
+}
