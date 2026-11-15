@@ -1,5 +1,6 @@
 import { requisicao, type Paginado } from './api';
 import type { Variacao } from './catalogo';
+import type { LoteVariacao } from './estoque';
 
 export type DadosVariacao = {
   produto: number;
@@ -10,6 +11,14 @@ export type DadosVariacao = {
   inicio_promo: string | null;
   fim_promo: string | null;
   peso_gramas: number | null;
+};
+
+export type DadosFabricacao = {
+  quantidade: number;
+  data_validade: string;
+  data_fabricacao?: string;
+  numero_lote?: string;
+  observacao?: string;
 };
 
 type FiltrosVariacoes = {
@@ -56,4 +65,8 @@ export async function apagarVariacao(id: number) {
 
 export async function restaurarVariacao(id: number): Promise<Variacao> {
   return requisicao<Variacao>(`/catalog/variacoes/${id}/restaurar/`, { metodo: 'PATCH' });
+}
+
+export async function fabricarVariacao(id: number, dados: DadosFabricacao): Promise<LoteVariacao> {
+  return requisicao<LoteVariacao>(`/catalog/variacoes/${id}/fabricar/`, { metodo: 'POST', corpo: dados });
 }

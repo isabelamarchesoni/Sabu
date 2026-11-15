@@ -20,3 +20,15 @@ export function lerData(texto: string) {
   }
   return data;
 }
+
+export function hoje() {
+  const agora = new Date();
+  return new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+}
+
+export function paraDataApi(data: Date) {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
