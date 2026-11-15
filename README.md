@@ -12,10 +12,13 @@ Aplicativo mobile de gestão e personalização para a **Sabú**, pequena empres
 - [Funcionalidades](#-funcionalidades)
 - [Requisitos](#-requisitos)
 - [Inteligência Artificial](#-inteligência-artificial)
-- [Arquitetura e tecnologias](#-arquitetura-e-tecnologias)
-- [Publicação em nuvem](#-publicação-em-nuvem)
+- [Arquitetura e tecnologias](#️-arquitetura-e-tecnologias)
+- [Publicação em nuvem](#️-publicação-em-nuvem)
 - [Como executar](#-como-executar)
+- [Problemas comuns](#-problemas-comuns)
 - [Estrutura do projeto](#-estrutura-do-projeto)
+- [Padrão de commit](#-padrão-de-commit)
+- [Roadmap](#️-roadmap)
 - [Equipe](#-equipe)
 
 ---
@@ -55,12 +58,15 @@ O primeiro contato foi feito pelo Instagram com a proprietária da empresa, que 
 
 ## ✨ Funcionalidades
 
-- 📦 Cadastro de **produtos e insumos**
-- 🔄 **Controle de estoque** e movimentações
-- 🧾 **Histórico de vendas e pedidos**
-- 🧴 **Quiz dermatológico** com recomendação de sabonete
-- 💰 **Precificação inteligente** com preço mínimo e preço sugerido
-- 📈 **Previsão de estoque** (quanto produzir)
+- **Vitrine pública** com filtros por categoria e tipo de pele, página do produto e contato pelo **WhatsApp**
+- **Área do administrador** protegida por login
+- Cadastro de **produtos, variações e insumos**
+- **Controle de estoque**, lotes e movimentações
+- **Histórico de vendas e pedidos**
+- **Modo claro e escuro**
+- **Quiz dermatológico** com recomendação de sabonete
+- **Precificação inteligente** com preço mínimo e preço sugerido
+- **Previsão de estoque** (quanto produzir)
 
 ---
 
@@ -108,10 +114,12 @@ Um **modelo pré-treinado de embeddings** compara as respostas do quiz dermatol�
 
 | Camada | Tecnologia |
 |---|---|
-| Aplicativo mobile | Expo / EAS Build |
-| Backend e banco de dados | Supabase (PostgreSQL, Edge Functions, Auth, Storage) |
+| Aplicativo mobile | React Native com **Expo SDK 58** (React Native 0.88, React 19), **Expo Router**, TypeScript |
+| Backend (API) | **Django 6 + Django REST Framework**, autenticação **JWT** (SimpleJWT), documentação **Swagger** (drf-spectacular) — repositório separado |
+| Banco de dados | **PostgreSQL** |
 | Machine Learning | Python, scikit-learn |
 | Recomendação | Modelo pré-treinado de embeddings |
+| Build | Expo / EAS Build |
 | Hospedagem | Azure |
 | Versionamento | GitHub |
 
@@ -119,9 +127,9 @@ Um **modelo pré-treinado de embeddings** compara as respostas do quiz dermatol�
 
 ## ☁️ Publicação em nuvem
 
-- **Código:** repositório no GitHub
+- **Código:** repositórios no GitHub (front-end neste repositório; back-end em repositório próprio)
 - **Build:** Expo / EAS Build
-- **Supabase:** banco de dados (PostgreSQL), Edge Functions, autenticação e storage
+- **API e banco:** Django REST + PostgreSQL
 - **Hospedagem:** Azure
 - **Ideia inicial:** pipeline simples de deploy contínuo, com custo baixo no início do projeto
 
@@ -129,42 +137,83 @@ Um **modelo pré-treinado de embeddings** compara as respostas do quiz dermatol�
 
 ## 🚀 Como executar
 
-> ⚠️ Ajuste os comandos conforme a estrutura final do repositório.
-
 ### Pré-requisitos
 
-- [Node.js](https://nodejs.org/) (versão LTS)
-- [Expo CLI](https://docs.expo.dev/) e aplicativo **Expo Go** no celular
-- Conta no [Supabase](https://supabase.com/)
-- Python 3.10+ (para os modelos de ML)
+| Ferramenta | Versão | Como conferir |
+|---|---|---|
+| [Node.js](https://nodejs.org/) | **22.13 ou mais novo** (exigência do Expo SDK 58) | `node -v` |
+| npm | vem junto com o Node | `npm -v` |
+| Git | qualquer recente | `git --version` |
+| [VS Code](https://code.visualstudio.com/) | recomendado | — |
+| **Expo Go** no celular | versão da loja com suporte ao **SDK 58** | ver no app |
+| Python | 3.12+ (para o back-end e os modelos de ML) | `python --version` |
 
-### Aplicativo
+> O front-end **não usa `requirements.txt`**: todas as bibliotecas estão no `frontend/package.json` (versões exatas no `package-lock.json`). O `npm install` instala tudo sozinho — **não instale bibliotecas à mão**.
+
+### Extensões do VS Code
+
+Ao abrir a pasta do projeto, o VS Code avisa que há **extensões recomendadas** (lista em `.vscode/extensions.json`). Clique em **Instalar todas**:
+
+- **Expo Tools** — autocompletar e validação do `app.json`
+- **ESLint** — aponta erros enquanto você digita
+- **React Native Tools** — comandos e depuração
+- **Path Intellisense** — completa os caminhos dos imports
+
+### Aplicativo (front-end)
 
 ```bash
-# Clonar o repositório
 git clone https://github.com/isabelamarchesoni/Sabu.git
-cd sabu
-
-# Instalar dependências
-npm install
-
-# Configurar variáveis de ambiente
-cp .env.example .env
-# Preencha SUPABASE_URL e SUPABASE_ANON_KEY
-
-# Iniciar o app
-npx expo start
 ```
+```bash
+cd Sabu/frontend
+```
+```bash
+npm install
+```
+
+Crie o arquivo **`frontend/.env`** a partir do modelo **`frontend/.env.example`**:
+
+```
+EXPO_PUBLIC_API_URL=http://IP_DO_PC:8000/api/v1
+EXPO_PUBLIC_WHATSAPP=55DDNUMERO
+```
+
+- `IP_DO_PC`: no Windows, rode `ipconfig` e use o **Endereço IPv4** da rede Wi-Fi.
+- `EXPO_PUBLIC_WHATSAPP`: só números (55 + DDD + número). Vazio = o botão do WhatsApp não aparece.
+- O `.env` **não vai para o GitHub**.
+
+Inicie o app:
+
+```bash
+npx expo start -c
+```
+
+Leia o QR code com a câmera do iPhone (ou pelo Expo Go no Android). **PC e celular precisam estar na mesma rede Wi-Fi.**
+
+| Comando | Para quê |
+|---|---|
+| `npx tsc --noEmit` | confere os tipos do TypeScript |
+| `npx expo-doctor` | confere se as versões das bibliotecas combinam com o SDK |
+| `npx expo install --fix` | corrige versões de bibliotecas desalinhadas |
+
+### Back-end (repositório separado)
+
+Dentro da pasta do back-end, com o ambiente virtual criado e as dependências instaladas (`pip install -r requirements.txt`):
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+```powershell
+python manage.py runserver 0.0.0.0:8000
+```
+
+- O `.env` do back-end precisa ter o IP do PC em `ALLOWED_HOSTS` (ex.: `ALLOWED_HOSTS=localhost,127.0.0.1,IP_DO_PC`).
+- Documentação da API (Swagger): `http://localhost:8000/api/docs/`.
+- O back-end ainda não tem CORS: teste o app **no celular**, não no navegador.
 
 ### Modelos de ML
 
-```bash
-cd ml
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python train.py
-```
+> Em desenvolvimento pela equipe de IA. Os comandos serão documentados quando a pasta dos modelos entrar no repositório.
 
 ### Build
 
@@ -174,18 +223,46 @@ npx eas build --platform android
 
 ---
 
+## 🧯 Problemas comuns
+
+| Sintoma | Causa provável | Solução |
+|---|---|---|
+| `No module named 'django'` | ambiente virtual do back-end desligado | rodar `.venv\Scripts\Activate.ps1` antes |
+| "Execução de scripts desabilitada" no PowerShell | política do Windows | `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` e repetir |
+| `DisallowedHost` | IP do PC fora do `ALLOWED_HOSTS` | adicionar o IP no `.env` do back-end e reiniciar |
+| App mostra "sem conexão" | IP errado no `.env`, back-end desligado ou redes Wi-Fi diferentes | conferir os três e reiniciar com `npx expo start -c` |
+| Mudei o `.env` e nada mudou | o Expo só lê o `.env` ao iniciar | parar (Ctrl + C) e rodar `npx expo start -c` |
+| "Unmatched route" numa tela nova | o app não pegou a pasta nova | `npx expo start -c`, fechar o Expo Go e ler o QR de novo |
+| "Project is incompatible with this version of Expo Go" | Expo Go desatualizado | atualizar o Expo Go pela loja |
+| Erro no `npm install` | Node antigo | instalar o Node 22.13+ e rodar `npm install` de novo |
+
+---
+
 ## 📁 Estrutura do projeto
 
-> Estrutura sugerida. Atualize conforme o projeto evoluir.
-
 ```
-sabu/
-├── app/            # Telas e navegação (Expo)
-├── components/     # Componentes reutilizáveis
-├── services/       # Integração com Supabase e APIs
-├── ml/             # Modelos de precificação, recomendação e previsão
-├── supabase/       # Edge Functions e migrações
-├── docs/           # Apresentação e comprovantes da pesquisa de campo
+Sabu/
+├── .vscode/
+│   └── extensions.json       extensões recomendadas do VS Code
+├── backend/                  versão antiga do back-end (o atual fica em repositório separado)
+├── frontend/
+│   ├── .env.example          modelo das variáveis de ambiente
+│   ├── .nvmrc                versão do Node (22)
+│   ├── app.json
+│   ├── package.json
+│   └── src/
+│       ├── app/              rotas — cada arquivo é uma tela (Expo Router)
+│       │   ├── _layout.tsx   tema + navegação geral
+│       │   ├── index.tsx     splash
+│       │   ├── login.tsx
+│       │   ├── vitrine/      área pública (lista e página do produto)
+│       │   └── (admin)/      área do administrador (protegida pelo login)
+│       │       ├── (abas)/   início, catálogo, estoque, compras e vendas
+│       │       └── categorias/, tipos-pele/, produtos/, variacoes/ …
+│       ├── components/ui/    kit de componentes (Button, TextField, PaginatedList…)
+│       ├── services/         conversa com a API (api, sessao, catalogo, variacoes…)
+│       ├── theme/            cores e modo claro/escuro
+│       └── utils/            formatação de dinheiro, datas e erros
 └── README.md
 ```
 
@@ -197,7 +274,9 @@ sabu/
 - [x] Definição de requisitos
 - [x] Design UI mobile
 - [x] Backend e API
-- [ ] Cadastro de produtos, insumos e estoque
+- [x] Vitrine pública e página do produto
+- [x] Login e área do administrador
+- [ ] Cadastro de produtos, insumos e estoque 
 - [ ] Histórico de vendas e pedidos
 - [ ] MVP de precificação (regressão linear)
 - [ ] Quiz dermatológico e recomendação
