@@ -94,7 +94,7 @@ export default function PaginatedList<T>({ carregar, renderizarItem, chave, depe
       }}
       ListHeaderComponent={cabecalho}
       ListEmptyComponent={<ScreenState tipo="vazio" mensagem={mensagemVazio} />}
-      ListFooterComponent={carregandoMais ? <ActivityIndicator color={cores.botao} style={styles.rodape} /> : null}
+      ListFooterComponent={carregandoMais ? <ActivityIndicator color={cores.botao} style={styles.rodape} /> : undefined}
       onEndReached={carregarMais}
       onEndReachedThreshold={0.4}
       refreshing={atualizando}
