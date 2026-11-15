@@ -55,5 +55,5 @@ export async function apagarVariacao(id: number) {
 }
 
 export async function restaurarVariacao(id: number): Promise<Variacao> {
-  return requisicao<Variacao>(`/catalog/variacoes/${id}/restaurar/`, { metodo: 'POST' });
+  return requisicao<Variacao>(`/catalog/variacoes/${id}/restaurar/`, { metodo: 'PATCH' });
 }
