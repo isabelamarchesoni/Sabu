@@ -36,11 +36,23 @@ export type Produto = {
   variacoes: Variacao[];
 };
 
+export type DadosProduto = {
+  nome: string;
+  descricao: string | null;
+  esta_ativo: boolean;
+  categorias: number[];
+  tipo_pele: number[];
+};
+
 type FiltrosProdutos = {
   pagina?: number;
   busca?: string;
   categoriaId?: number | null;
   tipoPeleId?: number | null;
+};
+
+type FiltrosProdutosAdmin = FiltrosProdutos & {
+  ordenacao?: string;
 };
 
 type FiltrosLista = {
@@ -133,4 +145,31 @@ export async function apagarTipoPele(id: number) {
 export async function contarProdutosDoTipoPele(id: number) {
   const resposta = await requisicao<Paginado<Produto>>('/catalog/produtos/', { parametros: { tipo_pele_id: id, page: 1 } });
   return resposta.count;
+}
+
+export async function listarProdutosAdmin(filtros: FiltrosProdutosAdmin): Promise<Paginado<Produto>> {
+  return requisicao<Paginado<Produto>>('/catalog/produtos/', {
+    parametros: {
+      page: filtros.pagina ?? 1,
+      search: filtros.busca,
+      categoria_id: filtros.categoriaId,
+      tipo_pele_id: filtros.tipoPeleId,
+      ordering: filtros.ordenacao,
+    },
+  });
+}
+
+export async function buscarProdutoAdmin(id: number): Promise<Produto> {
+  return requisicao<Produto>(`/catalog/produtos/${id}/`);
+}
+
+export async function salvarProduto(id: number | null, dados: DadosProduto): Promise<{ id: number }> {
+  if (id === null) {
+    return requisicao<{ id: number }>('/catalog/produtos/', { metodo: 'POST', corpo: dados });
+  }
+  return requisicao<{ id: number }>(`/catalog/produtos/${id}/`, { metodo: 'PUT', corpo: dados });
+}
+
+export async function apagarProduto(id: number) {
+  await requisicao<void>(`/catalog/produtos/${id}/`, { metodo: 'DELETE' });
 }
