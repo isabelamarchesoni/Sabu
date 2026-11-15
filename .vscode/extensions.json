@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "expo.vscode-expo-tools",
+    "dbaeumer.vscode-eslint",
+    "msjsdiag.vscode-react-native",
+    "christian-kohler.path-intellisense"
+  ]
+}
