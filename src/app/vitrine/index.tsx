@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { TemaContext } from '../../theme/TemaContext';
 import { listarProdutos, listarCategorias, listarTiposPele, type Categoria, type TipoPele } from '../../services/catalogo';
 import Screen from '../../components/ui/Screen';
@@ -14,6 +14,7 @@ import ThemeToggle from '../../components/ui/ThemeToggle';
 
 export default function Vitrine() {
   const { cores } = useContext(TemaContext);
+  const parametros = useLocalSearchParams<{ categoria?: string; tipoPele?: string }>();
 
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [tiposPele, setTiposPele] = useState<TipoPele[]>([]);
@@ -25,6 +26,17 @@ export default function Vitrine() {
   useEffect(function () {
     carregarFiltros();
   }, []);
+
+  useEffect(function () {
+    if (!parametros.categoria && !parametros.tipoPele) {
+      return;
+    }
+    setBusca('');
+    setBuscaAplicada('');
+    setCategoriaId(parametros.categoria ? Number(parametros.categoria) : null);
+    setTipoPeleId(parametros.tipoPele ? Number(parametros.tipoPele) : null);
+    router.setParams({ categoria: undefined, tipoPele: undefined });
+  }, [parametros.categoria, parametros.tipoPele]);
 
   async function carregarFiltros() {
     try {
