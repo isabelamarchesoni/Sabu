@@ -1,8 +1,10 @@
-import { useContext, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { Link } from 'expo-router';
+import { useContext, useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet } from 'react-native';
+import { Link, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { TemaContext } from '../theme/TemaContext';
+import { entrar, usuarioAtual } from '../services/autenticacao';
+import { mensagemDeErro } from '../services/api';
 import VitoriaRegia from '../components/VitoriaRegia';
 
 export default function Login() {
@@ -12,16 +14,36 @@ export default function Login() {
   const [senha, setSenha] = useState('');
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(false);
 
   const opacidadeFolhas = modoEscuro ? 0.85 : 1;
 
-  function entrar() {
+  useEffect(function () {
+    verificarSessao();
+  }, []);
+
+  async function verificarSessao() {
+    const usuario = await usuarioAtual();
+    if (usuario) {
+      router.replace('/inicio');
+    }
+  }
+
+  async function fazerLogin() {
     if (email.trim() === '' || senha === '') {
       setErro('Preencha o e-mail e a senha.');
       return;
     }
     setErro('');
-    console.log('Login simulado com', email);
+    setCarregando(true);
+    try {
+      await entrar(email.trim(), senha);
+      router.replace('/inicio');
+    } catch (falha) {
+      setErro(mensagemDeErro(falha, 'Não foi possível entrar. Tente novamente.'));
+    } finally {
+      setCarregando(false);
+    }
   }
 
   return (
@@ -65,6 +87,7 @@ export default function Login() {
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
+          editable={!carregando}
         />
 
         <Text style={[styles.rotulo, { color: cores.texto }]}>Senha</Text>
@@ -77,7 +100,8 @@ export default function Login() {
             placeholderTextColor={cores.placeholder}
             secureTextEntry={!senhaVisivel}
             autoCapitalize="none"
-            onSubmitEditing={entrar}
+            onSubmitEditing={fazerLogin}
+            editable={!carregando}
           />
           <TouchableOpacity
             style={styles.botaoOlho}
@@ -92,8 +116,14 @@ export default function Login() {
 
         {erro !== '' && <Text style={[styles.erro, { color: cores.erro }]}>{erro}</Text>}
 
-        <TouchableOpacity style={[styles.botao, { backgroundColor: cores.botao }]} onPress={entrar}>
-          <Text style={[styles.textoBotao, { color: cores.botaoTexto }]}>Entrar</Text>
+        <TouchableOpacity
+          style={[styles.botao, { backgroundColor: cores.botao, opacity: carregando ? 0.7 : 1 }]}
+          onPress={fazerLogin}
+          disabled={carregando}
+          accessibilityRole="button"
+          accessibilityState={{ busy: carregando }}
+        >
+          {carregando ? <ActivityIndicator color={cores.botaoTexto} /> : <Text style={[styles.textoBotao, { color: cores.botaoTexto }]}>Entrar</Text>}
         </TouchableOpacity>
 
         <Text style={[styles.rodape, { color: cores.textoApoio }]}>
