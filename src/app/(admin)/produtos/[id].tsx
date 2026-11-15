@@ -1,3 +1,4 @@
+// detalhe do produto (/produtos/3). O id é o número do produto. mostra dados e variações; editar abre produtos/formulario/[id].
 import { useCallback, useContext, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';

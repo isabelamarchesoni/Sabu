@@ -1,3 +1,4 @@
+// formulário de categoria. /categorias/novo cria uma categoria nova; /categorias/3 edita (e pode excluir) a categoria de id 3.
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';

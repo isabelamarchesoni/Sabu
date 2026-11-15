@@ -1,3 +1,4 @@
+// página pública do produto (/vitrine/3). O id é o número do produto. só leitura: variações, preço e botão do wpp.
 import { useContext, useEffect, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';

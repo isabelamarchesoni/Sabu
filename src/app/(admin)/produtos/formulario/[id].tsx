@@ -1,3 +1,4 @@
+// formulário de produto. /produtos/formulario/novo cria um produto novo; /produtos/formulario/3 edita o produto de id 3.
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';

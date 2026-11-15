@@ -1,3 +1,4 @@
+// formulário de tipo de pele. /tipos-pele/novo cria um tipo novo; /tipos-pele/3 edita (e pode excluir) o tipo de id 3.
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
