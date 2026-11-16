@@ -6,6 +6,7 @@ import { buscarCliente, salvarCliente, type Cliente } from '../../../../services
 import { mensagemDeErro } from '../../../../services/api';
 import { erroDoCampo } from '../../../../utils/erros';
 import { formatarData } from '../../../../utils/datas';
+import { digitos, mascararCpfCnpj, mascararTelefone } from '../../../../utils/mascaras';
 import Screen from '../../../../components/ui/Screen';
 import Header from '../../../../components/ui/Header';
 import TextField from '../../../../components/ui/TextField';
@@ -14,7 +15,6 @@ import Notice from '../../../../components/ui/Notice';
 import ScreenState from '../../../../components/ui/ScreenState';
 
 const LIMITE_NOME = 100;
-const LIMITE_CURTO = 20;
 const CAMPOS = ['nome', 'telefone', 'cpf_cnpj'];
 
 export default function FormularioCliente() {
@@ -44,8 +44,8 @@ export default function FormularioCliente() {
       const cliente = await buscarCliente(Number(id));
       setClienteAtual(cliente);
       setNome(cliente.nome);
-      setTelefone(cliente.telefone);
-      setCpfCnpj(cliente.cpf_cnpj ?? '');
+      setTelefone(mascararTelefone(cliente.telefone));
+      setCpfCnpj(cliente.cpf_cnpj ? mascararCpfCnpj(cliente.cpf_cnpj) : '');
     } catch (e) {
       setErroGeral(mensagemDeErro(e, 'Não foi possível carregar o cliente.'));
       setFalhouCarregar(true);
@@ -57,20 +57,20 @@ export default function FormularioCliente() {
   function validar() {
     const novosErros: Record<string, string> = {};
     const nomeLimpo = nome.trim();
-    const telefoneLimpo = telefone.trim();
-    const documentoLimpo = cpfCnpj.trim();
+    const numerosTelefone = digitos(telefone);
+    const numerosDocumento = digitos(cpfCnpj);
     if (!nomeLimpo) {
       novosErros.nome = 'Informe o nome do cliente.';
     } else if (nomeLimpo.length > LIMITE_NOME) {
       novosErros.nome = `Use no máximo ${LIMITE_NOME} caracteres.`;
     }
-    if (!telefoneLimpo) {
+    if (numerosTelefone.length === 0) {
       novosErros.telefone = 'Informe o telefone.';
-    } else if (telefoneLimpo.length > LIMITE_CURTO) {
-      novosErros.telefone = `Use no máximo ${LIMITE_CURTO} caracteres.`;
+    } else if (numerosTelefone.length < 10) {
+      novosErros.telefone = 'Informe o DDD e o número completo.';
     }
-    if (documentoLimpo.length > LIMITE_CURTO) {
-      novosErros.cpf_cnpj = `Use no máximo ${LIMITE_CURTO} caracteres.`;
+    if (numerosDocumento.length > 0 && numerosDocumento.length !== 11 && numerosDocumento.length !== 14) {
+      novosErros.cpf_cnpj = 'O CPF tem 11 números e o CNPJ tem 14.';
     }
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
@@ -85,8 +85,8 @@ export default function FormularioCliente() {
     try {
       const salvo = await salvarCliente(criando ? null : Number(id), {
         nome: nome.trim(),
-        telefone: telefone.trim(),
-        cpf_cnpj: cpfCnpj.trim() ? cpfCnpj.trim() : null,
+        telefone: telefone,
+        cpf_cnpj: cpfCnpj ? cpfCnpj : null,
       });
       if (criando) {
         router.replace(`/clientes/${salvo.id}`);
@@ -146,7 +146,9 @@ export default function FormularioCliente() {
         <TextField
           rotulo="Telefone"
           valor={telefone}
-          aoMudar={setTelefone}
+          aoMudar={function (texto) {
+            setTelefone(mascararTelefone(texto));
+          }}
           placeholder="(11) 98765-4321"
           erro={erros.telefone}
           teclado="phone-pad"
@@ -155,11 +157,13 @@ export default function FormularioCliente() {
         <TextField
           rotulo="CPF ou CNPJ"
           valor={cpfCnpj}
-          aoMudar={setCpfCnpj}
+          aoMudar={function (texto) {
+            setCpfCnpj(mascararCpfCnpj(texto));
+          }}
           placeholder="000.000.000-00"
           erro={erros.cpf_cnpj}
-          ajuda="Opcional."
-          teclado="numbers-and-punctuation"
+          ajuda="Opcional. Até 11 números vira CPF; de 12 a 14, CNPJ."
+          teclado="number-pad"
           desabilitado={salvando}
         />
 

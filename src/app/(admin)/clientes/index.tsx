@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { listarClientes, type Cliente } from '../../../services/vendas';
 import { formatarData } from '../../../utils/datas';
+import { mascararCpfCnpj, mascararTelefone } from '../../../utils/mascaras';
 import Screen from '../../../components/ui/Screen';
 import Header from '../../../components/ui/Header';
 import SearchField from '../../../components/ui/SearchField';
@@ -18,9 +19,9 @@ function pareceDocumento(texto: string) {
 }
 
 function subtituloCliente(cliente: Cliente) {
-  const partes = [cliente.telefone];
+  const partes = [mascararTelefone(cliente.telefone)];
   if (cliente.cpf_cnpj) {
-    partes.push(cliente.cpf_cnpj);
+    partes.push(mascararCpfCnpj(cliente.cpf_cnpj));
   }
   partes.push(cliente.ultimo_pedido_em ? `último pedido ${formatarData(cliente.ultimo_pedido_em)}` : 'sem pedidos');
   return partes.join(' · ');

@@ -5,6 +5,7 @@ import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-ro
 import { TemaContext } from '../../../theme/TemaContext';
 import { buscarCliente, apagarCliente, listarPedidos, SITUACOES_PEDIDO, type Cliente, type Pedido } from '../../../services/vendas';
 import { ErroApi, mensagemDeErro } from '../../../services/api';
+import { mascararCpfCnpj, mascararTelefone } from '../../../utils/mascaras';
 import { formatarDinheiro } from '../../../utils/formatar';
 import { formatarData } from '../../../utils/datas';
 import Screen from '../../../components/ui/Screen';
@@ -106,8 +107,8 @@ export default function DetalheCliente() {
       <Text style={[estilos.nome, { color: cores.texto }]}>{cliente.nome}</Text>
 
       <View style={[estilos.cartao, { backgroundColor: cores.cartao, borderColor: cores.borda }]}>
-        {linha('Telefone', cliente.telefone || 'Não informado')}
-        {linha('CPF/CNPJ', cliente.cpf_cnpj || 'Não informado')}
+        {linha('Telefone', cliente.telefone ? mascararTelefone(cliente.telefone) : 'Não informado')}
+        {linha('CPF/CNPJ', cliente.cpf_cnpj ? mascararCpfCnpj(cliente.cpf_cnpj) : 'Não informado')}
         {linha('Último pedido', cliente.ultimo_pedido_em ? formatarData(cliente.ultimo_pedido_em) : 'Nenhum')}
         {linha('Cadastrado em', formatarData(cliente.criado_em))}
       </View>
