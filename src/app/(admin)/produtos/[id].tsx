@@ -1,5 +1,6 @@
 // detalhe do produto (/produtos/3). O id é o número do produto. mostra dados e variações; editar abre produtos/formulario/[id].
-import { useCallback, useContext, useState } from 'react';
+import { useEffect } from 'react';
+import {preverPreco,type ResultadoPrecificacao,} from '../../../services/intelligence';import { useCallback, useContext, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { TemaContext } from '../../../theme/TemaContext';
@@ -45,6 +46,11 @@ export default function DetalheProduto() {
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [apagando, setApagando] = useState(false);
 
+  // Parte da IA
+  const [consultandoIA, setConsultandoIA] = useState(false);
+  const [resultadoIA, setResultadoIA] = useState<ResultadoPrecificacao | null>(null);
+  const [erroIA, setErroIA] = useState('');
+  
   useFocusEffect(
     useCallback(
       function () {
@@ -87,6 +93,40 @@ export default function DetalheProduto() {
       setApagando(false);
     }
   }
+
+
+  // TESTE TEMPORÁRIO DA INTEGRAÇÃO COM IA
+  useEffect(() => {
+    async function testarIA() {
+      console.log('Iniciando teste da API de inteligência...');
+
+      try {
+        const resultado = await preverPreco({
+          peso_g: 100,
+          unidade: 1,
+          formato: 'Barra',
+          tipo_sabonete: 'Corporal',
+          tipo_pele: 'Todos os tipos',
+          embalagem: 'Não informado',
+          base_sabonete: 'Processo a frio',
+          tipo_vendedor: 'Artesanal',
+          custo_unitario: 12.50,
+          margem_desejada: 30,
+        });
+
+        console.log('✅ API funcionando!');
+        console.log('Resultado completo:', resultado);
+        console.log('Previsão:', resultado.previsao);
+        console.log('Financeiro:', resultado.analise_financeira);
+
+      } catch (erro) {
+        console.error('❌ Erro ao conectar à IA:', erro);
+      }
+    }
+
+    testarIA();
+  }, []);
+
 
   if (carregando || !produto) {
     return (
@@ -185,7 +225,7 @@ export default function DetalheProduto() {
           </Text>
         )}
       </View>
-
+        
       <View style={estilos.acoes}>
         <Button
           titulo="Editar produto"
