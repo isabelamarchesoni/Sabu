@@ -1,4 +1,5 @@
 import { requisicao, type Paginado } from './api';
+import { enviarImagem, apagarImagem, type ArquivoImagem } from './imagem';
 
 export type Categoria = {
   id: number;
@@ -15,6 +16,7 @@ export type Variacao = {
   produto: number;
   sku: string;
   nome: string;
+  imagem: string | null;
   preco: string;
   preco_promo: string | null;
   inicio_promo: string | null;
@@ -29,6 +31,7 @@ export type Produto = {
   id: number;
   nome: string;
   descricao: string | null;
+  imagem: string | null;
   esta_ativo: boolean;
   criado_em: string;
   tipo_pele: TipoPele[];
@@ -172,4 +175,12 @@ export async function salvarProduto(id: number | null, dados: DadosProduto): Pro
 
 export async function apagarProduto(id: number) {
   await requisicao<void>(`/catalog/produtos/${id}/`, { metodo: 'DELETE' });
+}
+
+export async function enviarImagemProduto(id: number, arquivo: ArquivoImagem) {
+  await enviarImagem(`/catalog/produtos/${id}/imagem/`, arquivo);
+}
+
+export async function apagarImagemProduto(id: number) {
+  await apagarImagem(`/catalog/produtos/${id}/imagem/`);
 }

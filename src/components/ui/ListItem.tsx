@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TemaContext } from '../../theme/TemaContext';
 import Badge, { type TomBadge } from './Badge';
@@ -8,11 +8,12 @@ type Props = {
   titulo: string;
   subtitulo?: string;
   detalhe?: string;
+  imagem?: string | null;
   selo?: { texto: string; tom?: TomBadge };
   aoPressionar?: () => void;
 };
 
-export default function ListItem({ titulo, subtitulo, detalhe, selo, aoPressionar }: Props) {
+export default function ListItem({ titulo, subtitulo, detalhe, imagem, selo, aoPressionar }: Props) {
   const { cores } = useContext(TemaContext);
 
   return (
@@ -22,6 +23,15 @@ export default function ListItem({ titulo, subtitulo, detalhe, selo, aoPressiona
       disabled={!aoPressionar}
       accessibilityRole="button"
     >
+      {imagem ? (
+        <Image
+          source={{ uri: imagem }}
+          style={[styles.imagem, { backgroundColor: cores.borda }]}
+          resizeMode="cover"
+          accessible={false}
+        />
+      ) : null}
+
       <View style={styles.textos}>
         <Text style={[styles.titulo, { color: cores.texto }]} numberOfLines={1}>
           {titulo}
@@ -49,6 +59,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     gap: 12,
+  },
+  imagem: {
+    width: 56,
+    height: 56,
+    borderRadius: 10,
   },
   textos: {
     flex: 1,

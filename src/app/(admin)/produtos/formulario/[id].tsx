@@ -1,8 +1,20 @@
 // formulário de produto. /produtos/formulario/novo cria um produto novo; /produtos/formulario/3 edita o produto de id 3.
-import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useCallback, useContext, useEffect, useState } from 'react';
+import { Image, StyleSheet, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { buscarProdutoAdmin, salvarProduto, listarCategorias, listarTiposPele, type Categoria, type TipoPele } from '../../../../services/catalogo';
+import * as ImagePicker from 'expo-image-picker';
+import { TemaContext } from '../../../../theme/TemaContext';
+import {
+  buscarProdutoAdmin,
+  salvarProduto,
+  listarCategorias,
+  listarTiposPele,
+  enviarImagemProduto,
+  apagarImagemProduto,
+  type Categoria,
+  type TipoPele,
+} from '../../../../services/catalogo';
+import type { ArquivoImagem } from '../../../../services/imagem';
 import { mensagemDeErro } from '../../../../services/api';
 import { erroDoCampo } from '../../../../utils/erros';
 import Screen from '../../../../components/ui/Screen';
@@ -18,6 +30,7 @@ const LIMITE_NOME = 100;
 const CAMPOS = ['nome', 'descricao', 'categorias', 'tipo_pele'];
 
 export default function FormularioProduto() {
+  const { cores } = useContext(TemaContext);
   const { id } = useLocalSearchParams<{ id: string }>();
   const criando = id === 'novo';
 
@@ -28,11 +41,19 @@ export default function FormularioProduto() {
   const [tiposPeleIds, setTiposPeleIds] = useState<number[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [tiposPele, setTiposPele] = useState<TipoPele[]>([]);
+  const [imagemAtual, setImagemAtual] = useState<string | null>(null);
+  const [imagemNova, setImagemNova] = useState<ArquivoImagem | null>(null);
+  const [idCriado, setIdCriado] = useState<number | null>(null);
+  const [apagandoImagem, setApagandoImagem] = useState(false);
   const [erros, setErros] = useState<Record<string, string>>({});
   const [erroGeral, setErroGeral] = useState('');
   const [carregando, setCarregando] = useState(!criando);
   const [falhouCarregar, setFalhouCarregar] = useState(false);
   const [salvando, setSalvando] = useState(false);
+
+  // id do produto no servidor: o da rota, ou o que acabou de ser criado nesta tela
+  const idAtual = idCriado ?? (criando ? null : Number(id));
+  const previa = imagemNova ? imagemNova.uri : imagemAtual;
 
   useFocusEffect(
     useCallback(function () {
@@ -64,6 +85,7 @@ export default function FormularioProduto() {
       setNome(produto.nome);
       setDescricao(produto.descricao ?? '');
       setAtivo(produto.esta_ativo);
+      setImagemAtual(produto.imagem);
       setCategoriasIds(
         produto.categorias.map(function (categoria) {
           return categoria.id;
@@ -79,6 +101,45 @@ export default function FormularioProduto() {
       setFalhouCarregar(true);
     } finally {
       setCarregando(false);
+    }
+  }
+
+  async function escolherImagem() {
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (resultado.canceled) {
+      return;
+    }
+    const arquivo = resultado.assets[0];
+    setImagemNova({
+      uri: arquivo.uri,
+      nome: arquivo.fileName ?? 'imagem.jpg',
+      tipo: arquivo.mimeType ?? 'image/jpeg',
+    });
+  }
+
+  async function removerImagem() {
+    // imagem recém-escolhida e ainda não enviada: só descarta a prévia
+    if (imagemNova) {
+      setImagemNova(null);
+      return;
+    }
+    if (idAtual === null) {
+      return;
+    }
+    setErroGeral('');
+    setApagandoImagem(true);
+    try {
+      await apagarImagemProduto(idAtual);
+      setImagemAtual(null);
+    } catch (e) {
+      setErroGeral(mensagemDeErro(e, 'Não foi possível excluir a imagem.'));
+    } finally {
+      setApagandoImagem(false);
     }
   }
 
@@ -101,13 +162,32 @@ export default function FormularioProduto() {
     }
     setSalvando(true);
     try {
-      const salvo = await salvarProduto(criando ? null : Number(id), {
+      // 1) JSON: cria ou atualiza os dados do produto
+      const salvo = await salvarProduto(idAtual, {
         nome: nome.trim(),
         descricao: descricao.trim() ? descricao.trim() : null,
         esta_ativo: ativo,
         categorias: categoriasIds,
         tipo_pele: tiposPeleIds,
       });
+
+      // 2) multipart: só depois do sucesso acima, envia a imagem
+      if (imagemNova) {
+        try {
+          await enviarImagemProduto(salvo.id, imagemNova);
+          setImagemAtual(imagemNova.uri);
+          setImagemNova(null);
+        } catch (e) {
+          // o produto já existe: passa a editá-lo e deixa o usuário tentar de novo
+          setIdCriado(salvo.id);
+          setErroGeral(
+            mensagemDeErro(e, 'Não foi possível enviar a imagem.') +
+              ' Os dados do produto foram salvos; toque em Salvar para tentar enviar a imagem novamente.'
+          );
+          return;
+        }
+      }
+
       if (criando) {
         router.replace(`/produtos/${salvo.id}`);
       } else {
@@ -153,6 +233,33 @@ export default function FormularioProduto() {
       {erroGeral ? <Notice mensagem={erroGeral} tom="erro" /> : null}
 
       <View style={estilos.campos}>
+        <View style={estilos.imagemBloco}>
+          {previa ? (
+            <Image source={{ uri: previa }} style={[estilos.imagem, { backgroundColor: cores.borda }]} resizeMode="cover" />
+          ) : (
+            <View style={[estilos.imagem, estilos.semImagem, { backgroundColor: cores.borda }]} />
+          )}
+          <View style={estilos.imagemAcoes}>
+            <Button
+              titulo={previa ? 'Trocar imagem' : 'Escolher imagem'}
+              variante="secundario"
+              icone="image-outline"
+              desabilitado={salvando || apagandoImagem}
+              aoPressionar={escolherImagem}
+            />
+            {previa ? (
+              <Button
+                titulo="Excluir imagem"
+                variante="textoPerigo"
+                icone="trash-outline"
+                carregando={apagandoImagem}
+                desabilitado={salvando}
+                aoPressionar={removerImagem}
+              />
+            ) : null}
+          </View>
+        </View>
+
         <TextField
           rotulo="Nome"
           valor={nome}
@@ -252,6 +359,23 @@ const estilos = StyleSheet.create({
   campos: {
     marginTop: 8,
     gap: 16,
+  },
+  imagemBloco: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  imagem: {
+    width: 120,
+    height: 120,
+    borderRadius: 18,
+  },
+  semImagem: {
+    opacity: 0.4,
+  },
+  imagemAcoes: {
+    flex: 1,
+    gap: 8,
   },
   acoes: {
     marginTop: 28,

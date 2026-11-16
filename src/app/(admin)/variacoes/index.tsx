@@ -160,6 +160,7 @@ export default function ListaVariacoes() {
                 <ListItem
                   titulo={variacao.nome}
                   subtitulo={subtituloVariacao(variacao, nomesProdutos[variacao.produto] ?? `Produto ${variacao.produto}`)}
+                  imagem={variacao.imagem}
                   detalhe={formatarDinheiro(precoAtual(variacao))}
                   selo={seloVariacao(variacao)}
                   aoPressionar={function () {
