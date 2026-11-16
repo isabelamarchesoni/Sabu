@@ -68,7 +68,7 @@ export default function Inicio() {
         {erro ? <Notice mensagem={erro} tom="erro" /> : null}
         {erro ? <Button titulo="Tentar novamente" variante="texto" aoPressionar={carregarPainel} /> : null}
         <View style={estilos.linha}>
-          <StatCard rotulo="Pedidos pendentes" valor={resumo ? resumo.pedidosPendentes : null} icone="receipt-outline" tom="alerta" aoPressionar={function () { abrir('/pedidos'); }} />
+          <StatCard rotulo="Pedidos pendentes" valor={resumo ? resumo.pedidosPendentes : null} icone="receipt-outline" tom="alerta" aoPressionar={function () {abrir('/pedidos?status=PENDENTE'); }} />
           <StatCard rotulo="Matéria-prima vencida" valor={resumo ? resumo.lotesMateriaVencidos : null} icone="flask-outline" tom="erro" aoPressionar={function () { abrir('/lotes-materia-prima'); }} />
           <StatCard rotulo="Sabonetes vencidos" valor={resumo ? resumo.lotesSabonetesVencidos : null} icone="layers-outline" tom="erro" aoPressionar={function () { abrir('/lotes-sabonetes'); }} />
         </View>

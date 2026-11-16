@@ -42,6 +42,8 @@ export type Pedido = {
   itens: ItemPedido[];
 };
 
+export const STATUS_PEDIDO: StatusPedido[] = ['PENDENTE', 'CONCLUIDO', 'CANCELADO', 'ESTORNADO_COM_DEVOLUCAO', 'ESTORNADO_SEM_DEVOLUCAO'];
+
 export const SITUACOES_PEDIDO: Record<StatusPedido, { texto: string; tom: 'alerta' | 'sucesso' | 'neutro' | 'erro' }> = {
   PENDENTE: { texto: 'Pendente', tom: 'alerta' },
   CONCLUIDO: { texto: 'Concluído', tom: 'sucesso' },
@@ -60,6 +62,11 @@ type FiltrosClientes = {
 type FiltrosPedidos = {
   pagina?: number;
   clienteId?: number | null;
+  status?: StatusPedido | null;
+  criadoDe?: string;
+  criadoAte?: string;
+  valorMin?: string;
+  valorMax?: string;
   ordenacao?: string;
 };
 
@@ -94,7 +101,29 @@ export async function listarPedidos(filtros: FiltrosPedidos): Promise<Paginado<P
     parametros: {
       page: filtros.pagina ?? 1,
       cliente_id: filtros.clienteId,
+      status: filtros.status ?? undefined,
+      criado_de: filtros.criadoDe,
+      criado_ate: filtros.criadoAte,
+      valor_min: filtros.valorMin,
+      valor_max: filtros.valorMax,
       ordering: filtros.ordenacao,
     },
   });
+}
+
+export async function buscarPedido(id: number): Promise<Pedido> {
+  return requisicao<Pedido>(`/orders/pedidos/${id}/`);
+}
+
+export async function concluirPedido(id: number) {
+  await requisicao<unknown>(`/orders/pedidos/${id}/concluir/`, { metodo: 'POST' });
+}
+
+export async function cancelarPedido(id: number) {
+  await requisicao<unknown>(`/orders/pedidos/${id}/cancelar/`, { metodo: 'POST' });
+}
+
+export async function estornarPedido(id: number, comDevolucao: boolean) {
+  const acao = comDevolucao ? 'estornar_com_devolucao' : 'estornar_sem_devolucao';
+  await requisicao<unknown>(`/orders/pedidos/${id}/${acao}/`, { metodo: 'POST' });
 }
