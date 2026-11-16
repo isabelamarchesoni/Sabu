@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { TemaContext } from '../../../theme/TemaContext';
 import { buscarMateriaPrima, apagarMateriaPrima, restaurarMateriaPrima, listarLotesDaMateriaPrima, rotuloTipo, formatarQuantidade, formatarCusto, SITUACOES_LOTE, type LoteMateriaPrima, type MateriaPrima } from '../../../services/estoque';
+import { listarVinculos, opcoesFornecedores, type Vinculo } from '../../../services/compras';
 import { mensagemDeErro } from '../../../services/api';
 import { formatarData } from '../../../utils/datas';
 import Screen from '../../../components/ui/Screen';
@@ -22,6 +23,8 @@ export default function DetalheMateriaPrima() {
 
   const [materia, setMateria] = useState<MateriaPrima | null>(null);
   const [lotes, setLotes] = useState<LoteMateriaPrima[]>([]);
+  const [vinculos, setVinculos] = useState<Vinculo[]>([]);
+  const [nomesFornecedores, setNomesFornecedores] = useState<Record<number, string>>({});
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const [erroAcao, setErroAcao] = useState('');
@@ -41,9 +44,20 @@ export default function DetalheMateriaPrima() {
   async function carregar() {
     setErro('');
     try {
-      const [dados, listaLotes] = await Promise.all([buscarMateriaPrima(Number(id)), listarLotesDaMateriaPrima(Number(id))]);
+      const [dados, listaLotes, listaVinculos, fornecedores] = await Promise.all([
+        buscarMateriaPrima(Number(id)),
+        listarLotesDaMateriaPrima(Number(id)),
+        listarVinculos({ pagina: 1, materiaPrimaId: Number(id), apagados: false }),
+        opcoesFornecedores(),
+      ]);
+      const nomes: Record<number, string> = {};
+      fornecedores.forEach(function (opcao) {
+        nomes[opcao.valor] = opcao.rotulo.replace('★ ', '');
+      });
       setMateria(dados);
       setLotes(listaLotes);
+      setVinculos(listaVinculos.results);
+      setNomesFornecedores(nomes);
     } catch (e) {
       setErro(mensagemDeErro(e, 'Não foi possível carregar a matéria-prima.'));
     } finally {
@@ -155,6 +169,37 @@ export default function DetalheMateriaPrima() {
           })
         ) : (
           <Text style={[estilos.vazio, { color: cores.textoApoio }]}>Nenhum lote ainda. Os lotes nascem das compras ou de um lote novo.</Text>
+        )}
+      </View>
+
+      <View style={estilos.secao}>
+        <SectionTitle
+          titulo="Fornecedores"
+          textoAcao={apagada ? undefined : 'Vincular'}
+          aoPressionarAcao={
+            apagada
+              ? undefined
+              : function () {
+                  router.push(`/vinculos/novo?materia=${materia.id}` as Href);
+                }
+          }
+        />
+        {vinculos.length > 0 ? (
+          vinculos.map(function (vinculo) {
+            return (
+              <ListItem
+                key={vinculo.id}
+                titulo={nomesFornecedores[vinculo.fornecedor] ?? `Fornecedor ${vinculo.fornecedor}`}
+                subtitulo={vinculo.sku_materia_prima_fornecedor ? `código ${vinculo.sku_materia_prima_fornecedor}` : undefined}
+                detalhe={`${formatarCusto(vinculo.custo_unitario_fornecedor)}/${unidade}`}
+                aoPressionar={function () {
+                  router.push(`/vinculos/${vinculo.id}` as Href);
+                }}
+              />
+            );
+          })
+        ) : (
+          <Text style={[estilos.vazio, { color: cores.textoApoio }]}>Nenhum fornecedor vinculado. Vincule para comparar preços.</Text>
         )}
       </View>
 
