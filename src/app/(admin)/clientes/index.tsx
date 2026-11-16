@@ -14,10 +14,6 @@ import Button from '../../../components/ui/Button';
 
 type Ordem = 'nome' | '-criado_em';
 
-function pareceDocumento(texto: string) {
-  return /^[\d.\-/\s]+$/.test(texto) && texto.replace(/\D/g, '').length >= 11;
-}
-
 function subtituloCliente(cliente: Cliente) {
   const partes = [mascararTelefone(cliente.telefone)];
   if (cliente.cpf_cnpj) {
@@ -31,8 +27,6 @@ export default function ListaClientes() {
   const [busca, setBusca] = useState('');
   const [buscaAplicada, setBuscaAplicada] = useState('');
   const [ordem, setOrdem] = useState<Ordem>('nome');
-
-  const buscaPorDocumento = pareceDocumento(buscaAplicada);
 
   return (
     <Screen
@@ -83,8 +77,7 @@ export default function ListaClientes() {
           carregar={function (pagina) {
             return listarClientes({
               pagina: pagina,
-              nome: buscaAplicada && !buscaPorDocumento ? buscaAplicada : undefined,
-              cpfCnpj: buscaPorDocumento ? buscaAplicada : undefined,
+              busca: buscaAplicada,
               ordenacao: ordem,
             });
           }}
