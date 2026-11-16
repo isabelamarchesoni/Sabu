@@ -32,3 +32,13 @@ export function paraDataApi(data: Date) {
   const dia = String(data.getDate()).padStart(2, '0');
   return `${ano}-${mes}-${dia}`;
 }
+
+export function formatarDataHora(valor: string | null | undefined) {
+  if (!valor) {
+    return '';
+  }
+  const data = new Date(valor);
+  const hora = String(data.getHours()).padStart(2, '0');
+  const minuto = String(data.getMinutes()).padStart(2, '0');
+  return `${data.toLocaleDateString('pt-BR')} às ${hora}:${minuto}`;
+}
