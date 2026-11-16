@@ -76,7 +76,7 @@ export default function Inicio() {
       <View style={estilos.secao}>
         <SectionTitle titulo="Acesso rápido" />
         <View style={estilos.lista}>
-          <ListItem titulo="Novo pedido" subtitulo="Registrar uma venda" aoPressionar={function () { abrir('/pedidos/novo'); }} />
+          <ListItem titulo="Novo pedido" subtitulo="Registrar uma venda" aoPressionar={function () { abrir('/pedidos/formulario/novo'); }} />
           <ListItem titulo="Nova compra" subtitulo="Registrar a entrada de matéria-prima" aoPressionar={function () { abrir('/historico-compras/novo'); }} />
           <ListItem titulo="Ver vitrine" subtitulo="Como os compradores veem a loja" aoPressionar={function () { abrir('/vitrine'); }} />
         </View>
