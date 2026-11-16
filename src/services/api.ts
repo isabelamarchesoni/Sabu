@@ -74,16 +74,21 @@ async function renovarToken() {
 
 export async function requisicao<T>(caminho: string, opcoes: Opcoes = {}): Promise<T> {
   const { metodo = 'GET', corpo, parametros, autenticado = true } = opcoes;
+  const ehFormData = typeof FormData !== 'undefined' && corpo instanceof FormData;
 
   async function enviar(token: string | null) {
-    const cabecalhos: Record<string, string> = { 'Content-Type': 'application/json', Accept: 'application/json' };
+    const cabecalhos: Record<string, string> = { Accept: 'application/json' };
+    // Em multipart o React Native define o Content-Type (com o boundary) sozinho.
+    if (!ehFormData) {
+      cabecalhos['Content-Type'] = 'application/json';
+    }
     if (token) {
       cabecalhos.Authorization = 'Bearer ' + token;
     }
     return fetch(montarUrl(caminho, parametros), {
       method: metodo,
       headers: cabecalhos,
-      body: corpo === undefined ? undefined : JSON.stringify(corpo),
+      body: corpo === undefined ? undefined : ehFormData ? (corpo as FormData) : JSON.stringify(corpo),
     });
   }
 
