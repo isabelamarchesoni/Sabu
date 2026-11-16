@@ -18,7 +18,7 @@ const LIMITE_NOME = 100;
 const CAMPOS = ['nome', 'telefone', 'cpf_cnpj'];
 
 export default function FormularioCliente() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, origem } = useLocalSearchParams<{ id: string; origem?: string }>();
   const criando = id === 'novo';
 
   const [nome, setNome] = useState('');
@@ -88,7 +88,9 @@ export default function FormularioCliente() {
         telefone: telefone,
         cpf_cnpj: cpfCnpj ? cpfCnpj : null,
       });
-      if (criando) {
+      if (criando && origem === 'pedido') {
+        router.dismissTo({ pathname: '/pedidos/formulario/[id]', params: { id: 'novo', cliente: String(salvo.id) } });
+      } else if (criando) {
         router.replace(`/clientes/${salvo.id}`);
       } else {
         router.back();
@@ -172,10 +174,10 @@ export default function FormularioCliente() {
             <TextField
               rotulo="Último pedido"
               valor={clienteAtual.ultimo_pedido_em ? formatarData(clienteAtual.ultimo_pedido_em) : 'Nenhum'}
-              aoMudar={function () {}}
+              aoMudar={function () { }}
               desabilitado
             />
-            <TextField rotulo="Cadastrado em" valor={formatarData(clienteAtual.criado_em)} aoMudar={function () {}} desabilitado />
+            <TextField rotulo="Cadastrado em" valor={formatarData(clienteAtual.criado_em)} aoMudar={function () { }} desabilitado />
           </>
         ) : null}
       </View>
