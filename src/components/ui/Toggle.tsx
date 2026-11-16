@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { View, Text, Switch, StyleSheet } from 'react-native';
+import { View, Text, Switch, Pressable, StyleSheet } from 'react-native';
 import { TemaContext } from '../../theme/TemaContext';
 
 type Props = {
@@ -13,13 +13,27 @@ export default function Toggle({ rotulo, descricao, valor, aoMudar }: Props) {
   const { cores } = useContext(TemaContext);
 
   return (
-    <View style={[styles.linha, { backgroundColor: cores.campo, borderColor: cores.bordaForte }]}>
+    <Pressable
+      onPress={function () {
+        aoMudar(!valor);
+      }}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: valor }}
+      accessibilityLabel={rotulo}
+      style={[styles.linha, { backgroundColor: cores.campo, borderColor: valor ? cores.botao : cores.bordaForte }]}
+    >
       <View style={styles.textos}>
         <Text style={[styles.rotulo, { color: cores.texto }]}>{rotulo}</Text>
         {descricao && <Text style={[styles.descricao, { color: cores.textoApoio }]}>{descricao}</Text>}
       </View>
-      <Switch value={valor} onValueChange={aoMudar} trackColor={{ false: cores.bordaForte, true: cores.botao }} thumbColor="#FFFFFF" accessibilityLabel={rotulo} />
-    </View>
+      <Switch
+        value={valor}
+        onValueChange={aoMudar}
+        trackColor={{ false: cores.bordaForte, true: cores.botao }}
+        ios_backgroundColor={cores.bordaForte}
+        thumbColor="#FFFFFF"
+      />
+    </Pressable>
   );
 }
 
