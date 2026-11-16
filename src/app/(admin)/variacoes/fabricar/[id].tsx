@@ -10,6 +10,7 @@ import { ErroApi, mensagemDeErro } from '../../../../services/api';
 import { erroDoCampo } from '../../../../utils/erros';
 import { paraNumero } from '../../../../utils/formatar';
 import { hoje, lerData, paraDataApi } from '../../../../utils/datas';
+import { digitos, mascararData } from '../../../../utils/mascaras';
 import Screen from '../../../../components/ui/Screen';
 import Header from '../../../../components/ui/Header';
 import TextField from '../../../../components/ui/TextField';
@@ -226,7 +227,7 @@ export default function FabricarVariacao() {
               rotulo="Quantidade a fabricar"
               valor={quantidade}
               aoMudar={function (texto) {
-                setQuantidade(texto);
+              setQuantidade(digitos(texto));
                 setErros({ ...erros, quantidade: '' });
               }}
               placeholder="Ex.: 20"
@@ -238,7 +239,9 @@ export default function FabricarVariacao() {
             <TextField
               rotulo="Validade do lote"
               valor={validade}
-              aoMudar={setValidade}
+              aoMudar={function (texto) {
+                setValidade(mascararData(texto));
+              }}
               placeholder="dd/mm/aaaa"
               erro={erros.data_validade}
               ajuda="Obrigatória. Não pode estar no passado."
@@ -248,7 +251,9 @@ export default function FabricarVariacao() {
             <TextField
               rotulo="Data de fabricação"
               valor={fabricacao}
-              aoMudar={setFabricacao}
+              aoMudar={function (texto) {
+                setFabricacao(mascararData(texto));
+              }}
               placeholder="dd/mm/aaaa"
               erro={erros.data_fabricacao}
               ajuda="Opcional. Vazio = hoje."

@@ -41,3 +41,23 @@ export function mascararCpfCnpj(texto: string) {
   const final = numeros.length > 12 ? `-${numeros.slice(12)}` : '';
   return `${numeros.slice(0, 2)}.${numeros.slice(2, 5)}.${numeros.slice(5, 8)}/${numeros.slice(8, 12)}${final}`;
 }
+
+export function mascararData(texto: string) {
+  const numeros = somenteDigitos(texto).slice(0, 8);
+  if (numeros.length <= 2) {
+    return numeros;
+  }
+  if (numeros.length <= 4) {
+    return `${numeros.slice(0, 2)}/${numeros.slice(2)}`;
+  }
+  return `${numeros.slice(0, 2)}/${numeros.slice(2, 4)}/${numeros.slice(4)}`;
+}
+
+export function mascararDecimal(texto: string, casas: number) {
+  const limpo = texto.replace(/[^\d,]/g, '');
+  const partes = limpo.split(',');
+  if (partes.length === 1) {
+    return partes[0];
+  }
+  return `${partes[0]},${partes.slice(1).join('').slice(0, casas)}`;
+}

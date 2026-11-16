@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { listarProdutosAdmin, type Produto } from '../../../../services/catalogo';
 import { buscarVariacao, salvarVariacao, type DadosVariacao } from '../../../../services/variacoes';
 import { mensagemDeErro } from '../../../../services/api';
+import { digitos, mascararData, mascararDecimal } from '../../../../utils/mascaras';
 import { erroDoCampo } from '../../../../utils/erros';
 import { formatarData, lerData } from '../../../../utils/datas';
 import Screen from '../../../../components/ui/Screen';
@@ -248,7 +249,9 @@ export default function FormularioVariacao() {
         <TextField
           rotulo="Preço (R$)"
           valor={preco}
-          aoMudar={setPreco}
+          aoMudar={function (texto) {
+            setPreco(mascararDecimal(texto, 2));
+          }}
           placeholder="18,90"
           erro={erros.preco}
           teclado="decimal-pad"
@@ -258,7 +261,9 @@ export default function FormularioVariacao() {
         <TextField
           rotulo="Peso (g)"
           valor={peso}
-          aoMudar={setPeso}
+          aoMudar={function (texto) {
+            setPeso(digitos(texto));
+          }}
           placeholder="90"
           erro={erros.peso_gramas}
           ajuda="Opcional."
@@ -282,7 +287,9 @@ export default function FormularioVariacao() {
         <TextField
           rotulo="Preço promocional (R$)"
           valor={precoPromo}
-          aoMudar={setPrecoPromo}
+          aoMudar={function (texto) {
+            setPrecoPromo(mascararDecimal(texto, 2));
+          }}
           placeholder="15,90"
           erro={erros.preco_promo}
           ajuda="Deixe vazio para não ter promoção."
@@ -292,7 +299,9 @@ export default function FormularioVariacao() {
         <TextField
           rotulo="Início"
           valor={inicioPromo}
-          aoMudar={setInicioPromo}
+          aoMudar={function (texto) {
+            setInicioPromo(mascararData(texto));
+          }}
           placeholder="dd/mm/aaaa"
           erro={erros.inicio_promo}
           ajuda="Vazio = começa já."
@@ -302,7 +311,9 @@ export default function FormularioVariacao() {
         <TextField
           rotulo="Fim"
           valor={fimPromo}
-          aoMudar={setFimPromo}
+          aoMudar={function (texto) {
+            setFimPromo(mascararData(texto));
+          }}
           placeholder="dd/mm/aaaa"
           erro={erros.fim_promo}
           ajuda="Vazio = sem data para acabar."
