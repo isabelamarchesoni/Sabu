@@ -79,6 +79,7 @@ export default function Inicio() {
           <ListItem titulo="Novo pedido" subtitulo="Registrar uma venda" aoPressionar={function () { abrir('/pedidos/formulario/novo'); }} />
           <ListItem titulo="Nova compra" subtitulo="Registrar a entrada de matéria-prima" aoPressionar={function () { abrir('/historico-compras/novo'); }} />
           <ListItem titulo="Ver vitrine" subtitulo="Como os compradores veem a loja" aoPressionar={function () { abrir('/vitrine'); }} />
+          <ListItem titulo="Minha conta" subtitulo={usuario ? `${usuario.nome} · cadastrar administradores` : 'Perfil e equipe'} aoPressionar={function () { abrir('/conta'); }} />
         </View>
       </View>
       <View style={estilos.rodape}>
