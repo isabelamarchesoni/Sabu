@@ -211,3 +211,124 @@ export async function listarLotesDaVariacao(variacaoId: number): Promise<LoteVar
   });
   return resposta.results;
 }
+
+export type TipoMovimentacaoMaterial = 'ENTRADA' | 'SAIDA_PRODUCAO' | 'AJUSTE_OU_PERDA' | 'SAIDA_DEVOLUCAO';
+
+export type TipoMovimentacaoEstoque = 'ENTRADA' | 'SAIDA_VENDA' | 'AJUSTE_OU_PERDA' | 'ESTORNO_VENDA';
+
+export const TIPOS_MOVIMENTACAO: Record<TipoMovimentacaoMaterial | TipoMovimentacaoEstoque, { texto: string; tom: 'sucesso' | 'alerta' | 'erro' | 'neutro'; sinal: '+' | '−' }> = {
+  ENTRADA: { texto: 'Entrada', tom: 'sucesso', sinal: '+' },
+  SAIDA_PRODUCAO: { texto: 'Saída por produção', tom: 'neutro', sinal: '−' },
+  SAIDA_VENDA: { texto: 'Saída por venda', tom: 'neutro', sinal: '−' },
+  AJUSTE_OU_PERDA: { texto: 'Ajuste / perda', tom: 'erro', sinal: '−' },
+  SAIDA_DEVOLUCAO: { texto: 'Devolução', tom: 'alerta', sinal: '−' },
+  ESTORNO_VENDA: { texto: 'Estorno de venda', tom: 'alerta', sinal: '+' },
+};
+
+export const TIPOS_MANUAIS: { valor: 'ENTRADA' | 'AJUSTE_OU_PERDA'; rotulo: string }[] = [
+  { valor: 'ENTRADA', rotulo: 'Entrada (soma ao lote)' },
+  { valor: 'AJUSTE_OU_PERDA', rotulo: 'Ajuste ou perda (tira do lote)' },
+];
+
+export type MovimentacaoMaterial = {
+  id: number;
+  lote_materia_prima: number;
+  numero_lote_fabricante: string;
+  sku: string;
+  materia_prima: number;
+  materia_prima_nome: string;
+  fornecedor: number | null;
+  fornecedor_nome: string;
+  tipo: TipoMovimentacaoMaterial;
+  quantidade_movimentada: string;
+  observacao: string;
+  movimentado_em: string;
+};
+
+export type MovimentacaoEstoque = {
+  id: number;
+  lote_produto_variacao: number;
+  numero_lote: string;
+  sku: string;
+  variacao: number;
+  variacao_nome: string;
+  produto_nome: string;
+  usuario: number | null;
+  pedido: number | null;
+  tipo: TipoMovimentacaoEstoque;
+  quantidade_movimentada: number;
+  observacao: string;
+  movimentado_em: string;
+};
+
+export async function listarLotesMateriaPrima(filtros: { pagina?: number; busca?: string; materiaPrimaId?: number | null; status?: StatusLote | null }): Promise<Paginado<LoteMateriaPrima>> {
+  return requisicao<Paginado<LoteMateriaPrima>>('/inventory/lotes-materia-prima/', {
+    parametros: {
+      page: filtros.pagina ?? 1,
+      search: filtros.busca,
+      materia_prima_id: filtros.materiaPrimaId,
+      status: filtros.status,
+      ordering: '-criado_em',
+    },
+  });
+}
+
+export async function buscarLoteMateriaPrima(id: number): Promise<LoteMateriaPrima> {
+  return requisicao<LoteMateriaPrima>(`/inventory/lotes-materia-prima/${id}/`);
+}
+
+export async function criarLoteMateriaPrima(dados: { materia_prima: number; numero_lote_fabricante?: string; data_validade?: string; observacao?: string }): Promise<LoteMateriaPrima> {
+  return requisicao<LoteMateriaPrima>('/inventory/lotes-materia-prima/', { metodo: 'POST', corpo: dados });
+}
+
+export async function listarLotesVariacao(filtros: { pagina?: number; busca?: string; variacaoId?: number | null; status?: StatusLote | null }): Promise<Paginado<LoteVariacao>> {
+  return requisicao<Paginado<LoteVariacao>>('/inventory/lotes-variacao/', {
+    parametros: {
+      page: filtros.pagina ?? 1,
+      search: filtros.busca,
+      variacao_id: filtros.variacaoId,
+      status: filtros.status,
+      ordering: '-criado_em',
+    },
+  });
+}
+
+export async function buscarLoteVariacao(id: number): Promise<LoteVariacao> {
+  return requisicao<LoteVariacao>(`/inventory/lotes-variacao/${id}/`);
+}
+
+export async function criarLoteVariacao(dados: { variacao: number; data_validade: string; numero_lote?: string; data_fabricacao?: string; observacao?: string }): Promise<LoteVariacao> {
+  return requisicao<LoteVariacao>('/inventory/lotes-variacao/', { metodo: 'POST', corpo: dados });
+}
+
+export async function listarMovimentacoesMaterial(filtros: { pagina?: number; busca?: string; materiaPrimaId?: number | null; loteId?: number | null }): Promise<Paginado<MovimentacaoMaterial>> {
+  return requisicao<Paginado<MovimentacaoMaterial>>('/inventory/movimentacoes-material/', {
+    parametros: {
+      page: filtros.pagina ?? 1,
+      search: filtros.busca,
+      materia_prima_id: filtros.materiaPrimaId,
+      lote_materia_prima_id: filtros.loteId,
+      ordering: '-movimentado_em',
+    },
+  });
+}
+
+export async function criarMovimentacaoMaterial(dados: { lote_materia_prima: number; tipo: 'ENTRADA' | 'AJUSTE_OU_PERDA'; quantidade_movimentada: string; fornecedor?: number; observacao?: string }): Promise<MovimentacaoMaterial> {
+  return requisicao<MovimentacaoMaterial>('/inventory/movimentacoes-material/', { metodo: 'POST', corpo: dados });
+}
+
+export async function listarMovimentacoesEstoque(filtros: { pagina?: number; busca?: string; variacaoId?: number | null; loteId?: number | null }): Promise<Paginado<MovimentacaoEstoque>> {
+  return requisicao<Paginado<MovimentacaoEstoque>>('/inventory/movimentacoes-estoque/', {
+    parametros: {
+      page: filtros.pagina ?? 1,
+      search: filtros.busca,
+      variacao_id: filtros.variacaoId,
+      lote_produto_variacao_id: filtros.loteId,
+      ordering: '-movimentado_em',
+    },
+  });
+}
+
+export async function criarMovimentacaoEstoque(dados: { lote_produto_variacao: number; tipo: 'ENTRADA' | 'AJUSTE_OU_PERDA'; quantidade_movimentada: number; observacao?: string }): Promise<MovimentacaoEstoque> {
+  return requisicao<MovimentacaoEstoque>('/inventory/movimentacoes-estoque/', { metodo: 'POST', corpo: dados });
+}

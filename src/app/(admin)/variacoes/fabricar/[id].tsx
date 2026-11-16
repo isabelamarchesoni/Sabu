@@ -138,8 +138,8 @@ export default function FabricarVariacao() {
     }
     setFabricando(true);
     try {
-      await fabricarVariacao(Number(id), dados);
-      router.back();
+      const lote = await fabricarVariacao(Number(id), dados);
+      router.replace(`/lotes-sabonetes/${lote.id}` as Href);
     } catch (e) {
       if (e instanceof ErroApi && e.codigo === 'estoque_insuficiente') {
         setFaltaEstoque(true);
