@@ -248,6 +248,16 @@ export default function DetalheVariacao() {
             }}
           />
         ) : null}
+        {!apagada ? (
+          <Button
+            titulo="Preço sugerido pela IA"
+            variante="secundario"
+            icone="sparkles-outline"
+            aoPressionar={function () {
+              router.push(`/variacoes/precificar/${variacao.id}` as Href);
+            }}
+          />
+        ) : null}
         <Button
           titulo="Editar variação"
           variante="secundario"

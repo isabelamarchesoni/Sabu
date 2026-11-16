@@ -1,5 +1,6 @@
 
 import { requisicao } from './api';
+import { listarFichasDaVariacao } from './estoque';
 
 // Dados enviados para o Django
 export interface DadosPrecificacao {
@@ -56,4 +57,28 @@ export async function preverPreco(
       autenticado: true,
     }
   );
+}
+
+export const OPCOES_FORMATO = ['Barra', 'Líquido', 'Pastoso'];
+
+export const OPCOES_TIPO_SABONETE = ['Corporal', 'Facial', 'Íntimo', 'Infantil'];
+
+export const OPCOES_TIPO_PELE = ['Todos os tipos', 'Normal', 'Seca', 'Oleosa', 'Mista', 'Sensível'];
+
+export const OPCOES_EMBALAGEM = ['Não informado', 'Sem embalagem', 'Papel', 'Caixa', 'Plástico', 'Vidro'];
+
+export const OPCOES_BASE_SABONETE = ['Processo a frio', 'Glicerina', 'Base vegetal'];
+
+export const OPCOES_TIPO_VENDEDOR = ['Artesanal', 'Industrial'];
+
+export async function custoPelaFichaTecnica(variacaoId: number): Promise<number> {
+  const fichas = await listarFichasDaVariacao(variacaoId);
+  const custos = await Promise.all(
+    fichas.map(function (ficha) {
+      return requisicao<{ custo_unitario_referencia: string }>(`/inventory/materias-primas/${ficha.materia_prima.id}/`);
+    })
+  );
+  return fichas.reduce(function (soma, ficha, indice) {
+    return soma + Number(ficha.quantidade_necessaria) * Number(custos[indice].custo_unitario_referencia);
+  }, 0);
 }
