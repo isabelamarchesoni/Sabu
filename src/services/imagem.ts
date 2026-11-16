@@ -1,5 +1,8 @@
 import { Platform } from 'react-native';
-import { requisicao } from './api';
+import * as FileSystem from 'expo-file-system/legacy';
+import { URL_API } from './config';
+import { lerTokens } from './sessao';
+import { ErroApi, requisicao } from './api';
 
 export type ArquivoImagem = {
   uri: string;
@@ -20,25 +23,56 @@ const TIPO_POR_EXTENSAO: Record<string, string> = {
   webp: 'image/webp',
 };
 
-export async function enviarImagem(caminho: string, arquivo: ArquivoImagem) {
-  const formulario = new FormData();
+async function enviarNoCelular(caminho: string, arquivo: ArquivoImagem) {
+  const extensaoUri = (arquivo.uri.split('?')[0].split('.').pop() ?? '').toLowerCase();
+  const tipo = TIPO_POR_EXTENSAO[extensaoUri] ?? arquivo.tipo ?? 'image/jpeg';
 
-  if (Platform.OS === 'web') {
-    // Web: a uri é blob:/data:, então o tipo real vem do próprio conteúdo.
-    const original = await (await fetch(arquivo.uri)).blob();
-    const tipo = original.type || arquivo.tipo;
-    const extensao = EXTENSAO_POR_TIPO[tipo] ?? 'jpg';
-    const blob = original.type ? original : new Blob([original], { type: tipo });
-    formulario.append('imagem', blob, `imagem.${extensao}`);
-  } else {
-    // Nativo: o RN lê o arquivo pela uri. Deriva tipo e nome da extensão final.
-    const extensaoUri = (arquivo.uri.split('?')[0].split('.').pop() ?? '').toLowerCase();
-    const conhecida = extensaoUri in TIPO_POR_EXTENSAO;
-    const tipo = conhecida ? TIPO_POR_EXTENSAO[extensaoUri] : arquivo.tipo;
-    const nome = `imagem.${conhecida ? extensaoUri : 'jpg'}`;
-    formulario.append('imagem', { uri: arquivo.uri, name: nome, type: tipo } as unknown as Blob);
+  const { acesso } = await lerTokens();
+  const cabecalhos: Record<string, string> = { Accept: 'application/json' };
+  if (acesso) {
+    cabecalhos.Authorization = 'Bearer ' + acesso;
   }
 
+  let resposta;
+  try {
+    resposta = await FileSystem.uploadAsync(URL_API + caminho, arquivo.uri, {
+      httpMethod: 'PUT',
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: 'imagem',
+      mimeType: tipo,
+      headers: cabecalhos,
+    });
+  } catch {
+    throw new ErroApi(0, 'sem_conexao', 'Não foi possível conectar ao servidor. Verifique sua conexão.', null);
+  }
+
+  if (resposta.status === 401) {
+    throw new ErroApi(401, 'sessao_expirada', 'Sua sessão expirou. Entre novamente.', null);
+  }
+  if (resposta.status < 200 || resposta.status >= 300) {
+    let dados: { code?: string; detail?: string; errors?: unknown } | null = null;
+    try {
+      dados = JSON.parse(resposta.body);
+    } catch {
+      dados = null;
+    }
+    throw new ErroApi(resposta.status, dados?.code ?? 'erro', dados?.detail ?? 'Algo deu errado. Tente novamente.', dados?.errors ?? null);
+  }
+}
+
+export async function enviarImagem(caminho: string, arquivo: ArquivoImagem) {
+  if (Platform.OS !== 'web') {
+    await enviarNoCelular(caminho, arquivo);
+    return;
+  }
+
+  // Web: a uri é blob:/data:, então o tipo real vem do próprio conteúdo.
+  const original = await (await fetch(arquivo.uri)).blob();
+  const tipo = original.type || arquivo.tipo || 'image/jpeg';
+  const extensao = EXTENSAO_POR_TIPO[tipo] ?? 'jpg';
+
+  const formulario = new FormData();
+  formulario.append('imagem', original, `imagem.${extensao}`);
   await requisicao<unknown>(caminho, { metodo: 'PUT', corpo: formulario });
 }
 
