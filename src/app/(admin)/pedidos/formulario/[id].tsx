@@ -257,6 +257,17 @@ export default function FormularioPedido() {
     };
   }
 
+  function enderecoSemVazios() {
+    const dados = enderecoLimpo();
+    const resultado: Partial<DadosEndereco> = {};
+    (Object.keys(dados) as (keyof DadosEndereco)[]).forEach(function (campo) {
+      if (dados[campo]) {
+        resultado[campo] = dados[campo];
+      }
+    });
+    return resultado;
+  }
+
   async function salvar() {
     setErroGeral('');
     setFaltaEstoque(false);
@@ -275,8 +286,8 @@ export default function FormularioPedido() {
     try {
       if (criando) {
         const novo = await criarPedido({
-          ...enderecoLimpo(),
-          cliente: clienteId,
+          ...enderecoSemVazios(),
+          ...(clienteId !== null ? { cliente: clienteId } : {}),
           itens: itens.map(function (item) {
             return { variacao: item.variacaoId as number, quantidade_item: Number(item.quantidade) };
           }),

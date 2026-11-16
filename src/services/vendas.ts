@@ -139,8 +139,8 @@ export type DadosEndereco = {
   observacao: string;
 };
 
-export type DadosPedido = DadosEndereco & {
-  cliente: number | null;
+export type DadosPedido = Partial<DadosEndereco> & {
+  cliente?: number;
   itens: { variacao: number; quantidade_item: number }[];
 };
 
