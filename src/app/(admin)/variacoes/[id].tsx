@@ -1,6 +1,6 @@
 // detalhe da variação (/variacoes/3). o id é o número da variação. mostra dados, estoque, ficha técnica e lotes; editar abre variacoes/formulario/[id].
 import { useCallback, useContext, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { TemaContext } from '../../../theme/TemaContext';
 import { buscarProdutoAdmin, type Variacao } from '../../../services/catalogo';
@@ -150,6 +150,15 @@ export default function DetalheVariacao() {
       {apagada ? <Notice mensagem="Esta variação está apagada e não aparece na vitrine. Restaure para voltar a vender." tom="erro" /> : null}
       {aviso ? <Notice mensagem={aviso} tom="sucesso" /> : null}
       {erroAcao ? <Notice mensagem={erroAcao} tom="erro" /> : null}
+
+      {variacao.imagem ? (
+        <Image
+          source={{ uri: variacao.imagem }}
+          style={[estilos.imagem, { backgroundColor: cores.borda }]}
+          resizeMode="cover"
+          accessibilityLabel={`Imagem de ${variacao.nome}`}
+        />
+      ) : null}
 
       <View style={estilos.topo}>
         <Text style={[estilos.nome, { color: cores.texto }]}>{variacao.nome}</Text>
@@ -332,5 +341,11 @@ const estilos = StyleSheet.create({
     marginTop: 20,
     marginBottom: 12,
     alignItems: 'center',
+  },
+  imagem: {
+    width: 200,
+    height: 200,
+    borderRadius: 18,
+    marginBottom: 16,
   },
 });

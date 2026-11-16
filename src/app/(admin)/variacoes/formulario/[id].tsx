@@ -1,9 +1,18 @@
 // formulário de variação. /variacoes/formulario/novo cria (aceita ?produto=ID para já vir escolhido); /variacoes/formulario/3 edita a variação de id 3.
-import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useContext, useEffect, useState } from 'react';
+import { Image, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { TemaContext } from '../../../../theme/TemaContext';
 import { listarProdutosAdmin, type Produto } from '../../../../services/catalogo';
-import { buscarVariacao, salvarVariacao, type DadosVariacao } from '../../../../services/variacoes';
+import {
+  buscarVariacao,
+  salvarVariacao,
+  enviarImagemVariacao,
+  apagarImagemVariacao,
+  type ArquivoImagem,
+  type DadosVariacao,
+} from '../../../../services/variacoes';
 import { mensagemDeErro } from '../../../../services/api';
 import { erroDoCampo } from '../../../../utils/erros';
 import { formatarData, lerData } from '../../../../utils/datas';
@@ -30,6 +39,7 @@ function decimalParaCampo(valor: string | null) {
 }
 
 export default function FormularioVariacao() {
+  const { cores } = useContext(TemaContext);
   const { id, produto } = useLocalSearchParams<{ id: string; produto?: string }>();
   const criando = id === 'novo';
 
@@ -43,11 +53,19 @@ export default function FormularioVariacao() {
   const [fimPromo, setFimPromo] = useState('');
   const [peso, setPeso] = useState('');
   const [estoque, setEstoque] = useState<number | null>(null);
+  const [imagemAtual, setImagemAtual] = useState<string | null>(null);
+  const [imagemNova, setImagemNova] = useState<ArquivoImagem | null>(null);
+  const [idCriado, setIdCriado] = useState<number | null>(null);
+  const [apagandoImagem, setApagandoImagem] = useState(false);
   const [erros, setErros] = useState<Record<string, string>>({});
   const [erroGeral, setErroGeral] = useState('');
   const [carregando, setCarregando] = useState(!criando);
   const [falhouCarregar, setFalhouCarregar] = useState(false);
   const [salvando, setSalvando] = useState(false);
+
+  // id da variação no servidor: o da rota, ou o que acabou de ser criado nesta tela
+  const idAtual = idCriado ?? (criando ? null : Number(id));
+  const previa = imagemNova ? imagemNova.uri : imagemAtual;
 
   useEffect(function () {
     carregarProdutos();
@@ -82,11 +100,51 @@ export default function FormularioVariacao() {
       setFimPromo(formatarData(variacao.fim_promo));
       setPeso(variacao.peso_gramas ? String(variacao.peso_gramas) : '');
       setEstoque(variacao.quantidade_estoque);
+      setImagemAtual(variacao.imagem);
     } catch (e) {
       setErroGeral(mensagemDeErro(e, 'Não foi possível carregar a variação.'));
       setFalhouCarregar(true);
     } finally {
       setCarregando(false);
+    }
+  }
+
+  async function escolherImagem() {
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (resultado.canceled) {
+      return;
+    }
+    const arquivo = resultado.assets[0];
+    setImagemNova({
+      uri: arquivo.uri,
+      nome: arquivo.fileName ?? 'imagem.jpg',
+      tipo: arquivo.mimeType ?? 'image/jpeg',
+    });
+  }
+
+  async function removerImagem() {
+    // imagem recém-escolhida e ainda não enviada: só descarta a prévia
+    if (imagemNova) {
+      setImagemNova(null);
+      return;
+    }
+    if (idAtual === null) {
+      return;
+    }
+    setErroGeral('');
+    setApagandoImagem(true);
+    try {
+      await apagarImagemVariacao(idAtual);
+      setImagemAtual(null);
+    } catch (e) {
+      setErroGeral(mensagemDeErro(e, 'Não foi possível excluir a imagem.'));
+    } finally {
+      setApagandoImagem(false);
     }
   }
 
@@ -165,7 +223,26 @@ export default function FormularioVariacao() {
     }
     setSalvando(true);
     try {
-      const salva = await salvarVariacao(criando ? null : Number(id), dados);
+      // 1) JSON: cria ou atualiza os dados da variação
+      const salva = await salvarVariacao(idAtual, dados);
+
+      // 2) multipart: só depois do sucesso acima, envia a imagem
+      if (imagemNova) {
+        try {
+          await enviarImagemVariacao(salva.id, imagemNova);
+          setImagemAtual(imagemNova.uri);
+          setImagemNova(null);
+        } catch (e) {
+          // a variação já existe: passa a editá-la e deixa o usuário tentar de novo
+          setIdCriado(salva.id);
+          setErroGeral(
+            mensagemDeErro(e, 'Não foi possível enviar a imagem.') +
+              ' Os dados da variação foram salvos; toque em Salvar para tentar enviar a imagem novamente.'
+          );
+          return;
+        }
+      }
+
       if (criando) {
         router.replace(`/variacoes/${salva.id}`);
       } else {
@@ -211,6 +288,33 @@ export default function FormularioVariacao() {
       {erroGeral ? <Notice mensagem={erroGeral} tom="erro" /> : null}
 
       <View style={estilos.campos}>
+        <View style={estilos.imagemBloco}>
+          {previa ? (
+            <Image source={{ uri: previa }} style={[estilos.imagem, { backgroundColor: cores.borda }]} resizeMode="cover" />
+          ) : (
+            <View style={[estilos.imagem, estilos.semImagem, { backgroundColor: cores.borda }]} />
+          )}
+          <View style={estilos.imagemAcoes}>
+            <Button
+              titulo={previa ? 'Trocar imagem' : 'Escolher imagem'}
+              variante="secundario"
+              icone="image-outline"
+              desabilitado={salvando || apagandoImagem}
+              aoPressionar={escolherImagem}
+            />
+            {previa ? (
+              <Button
+                titulo="Excluir imagem"
+                variante="textoPerigo"
+                icone="trash-outline"
+                carregando={apagandoImagem}
+                desabilitado={salvando}
+                aoPressionar={removerImagem}
+              />
+            ) : null}
+          </View>
+        </View>
+
         <Select
           rotulo="Produto"
           opcoes={produtos.map(function (item) {
@@ -330,6 +434,23 @@ const estilos = StyleSheet.create({
   campos: {
     marginTop: 8,
     gap: 16,
+  },
+  imagemBloco: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  imagem: {
+    width: 120,
+    height: 120,
+    borderRadius: 18,
+  },
+  semImagem: {
+    opacity: 0.4,
+  },
+  imagemAcoes: {
+    flex: 1,
+    gap: 8,
   },
   secao: {
     marginTop: 24,
