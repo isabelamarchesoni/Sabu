@@ -1,6 +1,6 @@
 // detalhe do produto (/produtos/3). O id é o número do produto. mostra dados e variações; editar abre produtos/formulario/[id].
 import { useCallback, useContext, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { TemaContext } from '../../../theme/TemaContext';
 import { buscarProdutoAdmin, apagarProduto, type Produto, type Variacao } from '../../../services/catalogo';
@@ -106,6 +106,16 @@ export default function DetalheProduto() {
       <Header titulo="Produto" voltar />
 
       {erroAcao ? <Notice mensagem={erroAcao} tom="erro" /> : null}
+
+
+      {produto.imagem ? (
+        <Image
+          source={{ uri: produto.imagem }}
+          style={[estilos.imagem, { backgroundColor: cores.borda }]}
+          resizeMode="cover"
+          accessibilityLabel={`Imagem de ${produto.nome}`}
+        />
+      ) : null}
 
       <View style={estilos.topo}>
         <Text style={[estilos.nome, { color: cores.texto }]}>{produto.nome}</Text>
@@ -255,5 +265,11 @@ const estilos = StyleSheet.create({
     marginTop: 20,
     marginBottom: 12,
     alignItems: 'center',
+  },
+  imagem: {
+    width: 200,
+    height: 200,
+    borderRadius: 18,
+    marginBottom: 16,
   },
 });

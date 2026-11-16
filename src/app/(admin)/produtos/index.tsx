@@ -156,6 +156,7 @@ export default function ListaProdutos() {
                 <ListItem
                   titulo={produto.nome}
                   subtitulo={resumoProduto(produto)}
+                  imagem={produto.imagem}
                   selo={produto.esta_ativo ? { texto: 'Ativo', tom: 'sucesso' } : { texto: 'Desativado', tom: 'neutro' }}
                   aoPressionar={function () {
                     router.push(`/produtos/${produto.id}`);
