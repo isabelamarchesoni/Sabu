@@ -1,6 +1,9 @@
 import { requisicao, type Paginado } from './api';
 import type { Variacao } from './catalogo';
 import type { LoteVariacao } from './estoque';
+import { enviarImagem, apagarImagem, type ArquivoImagem } from './imagem';
+
+export type { ArquivoImagem };
 
 export type DadosVariacao = {
   produto: number;
@@ -69,4 +72,12 @@ export async function restaurarVariacao(id: number): Promise<Variacao> {
 
 export async function fabricarVariacao(id: number, dados: DadosFabricacao): Promise<LoteVariacao> {
   return requisicao<LoteVariacao>(`/catalog/variacoes/${id}/fabricar/`, { metodo: 'POST', corpo: dados });
+}
+
+export async function enviarImagemVariacao(id: number, arquivo: ArquivoImagem) {
+  await enviarImagem(`/catalog/variacoes/${id}/imagem/`, arquivo);
+}
+
+export async function apagarImagemVariacao(id: number) {
+  await apagarImagem(`/catalog/variacoes/${id}/imagem/`);
 }
