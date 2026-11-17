@@ -49,7 +49,7 @@ export async function preverPreco(
   dados: DadosPrecificacao
 ): Promise<ResultadoPrecificacao> {
 
-  return requisicao<ResultadoPrecificacao>(
+  const resposta = await requisicao<ResultadoPrecificacao | PrevisaoPreco>(
     '/intelligence/prever-preco/',
     {
       metodo: 'POST',
@@ -57,19 +57,42 @@ export async function preverPreco(
       autenticado: true,
     }
   );
+
+  if ('previsao' in resposta) {
+    return resposta;
+  }
+  return { previsao: resposta };
 }
 
-export const OPCOES_FORMATO = ['Barra', 'Líquido', 'Pastoso'];
+export function analisarPreco(preco: number, custoUnitario: number, margemDesejada?: number): AnaliseFinanceira {
+  const lucro = preco - custoUnitario;
+  const analise: AnaliseFinanceira = {
+    custo_unitario: custoUnitario,
+    custo_total: custoUnitario,
+    receita_estimada: preco,
+    lucro_unitario: Math.round(lucro * 100) / 100,
+    lucro_total: Math.round(lucro * 100) / 100,
+    margem_lucro_percentual: preco > 0 ? Math.round((lucro / preco) * 10000) / 100 : 0,
+    lucro_positivo: lucro > 0,
+  };
+  if (margemDesejada !== undefined && margemDesejada < 100) {
+    analise.margem_desejada_percentual = margemDesejada;
+    analise.preco_minimo_margem_desejada = Math.round((custoUnitario / (1 - margemDesejada / 100)) * 100) / 100;
+  }
+  return analise;
+}
 
-export const OPCOES_TIPO_SABONETE = ['Corporal', 'Facial', 'Íntimo', 'Infantil'];
+export const OPCOES_FORMATO = ['Barra', 'Barra Massageador', 'Decorativo'];
 
-export const OPCOES_TIPO_PELE = ['Todos os tipos', 'Normal', 'Seca', 'Oleosa', 'Mista', 'Sensível'];
+export const OPCOES_TIPO_SABONETE = ['Corporal', 'Corporal e Barba', 'Corporal e Facial', 'Corporal e Mão', 'Corporal p/ bebê', 'Esfoliante Corporal', 'Esfoliante Facial', 'Facial'];
 
-export const OPCOES_EMBALAGEM = ['Não informado', 'Sem embalagem', 'Papel', 'Caixa', 'Plástico', 'Vidro'];
+export const OPCOES_TIPO_PELE = ['Todos os tipos', 'Acneica', 'Oleosa, Acneica', 'Sensível', 'Não informado'];
 
-export const OPCOES_BASE_SABONETE = ['Processo a frio', 'Glicerina', 'Base vegetal'];
+export const OPCOES_EMBALAGEM = ['Não informado', 'Nao possui', 'Caixa', 'Plastico', 'Saboneteira', 'Saco'];
 
-export const OPCOES_TIPO_VENDEDOR = ['Artesanal', 'Industrial'];
+export const OPCOES_BASE_SABONETE = ['Processo a frio', 'Glicerina', 'Base vegetal', 'Não informado'];
+
+export const OPCOES_TIPO_VENDEDOR = ['Artesanal', 'Grande marca'];
 
 export async function custoPelaFichaTecnica(variacaoId: number): Promise<number> {
   const fichas = await listarFichasDaVariacao(variacaoId);

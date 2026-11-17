@@ -5,7 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { TemaContext } from '../../../../theme/TemaContext';
 import { buscarVariacao } from '../../../../services/variacoes';
 import { buscarProdutoAdmin, type Variacao } from '../../../../services/catalogo';
-import { preverPreco, custoPelaFichaTecnica, OPCOES_FORMATO, OPCOES_TIPO_SABONETE, OPCOES_TIPO_PELE, OPCOES_EMBALAGEM, OPCOES_BASE_SABONETE, OPCOES_TIPO_VENDEDOR, type DadosPrecificacao, type ResultadoPrecificacao } from '../../../../services/intelligence';
+import { preverPreco, analisarPreco, custoPelaFichaTecnica, OPCOES_FORMATO, OPCOES_TIPO_SABONETE, OPCOES_TIPO_PELE, OPCOES_EMBALAGEM, OPCOES_BASE_SABONETE, OPCOES_TIPO_VENDEDOR, type DadosPrecificacao, type ResultadoPrecificacao } from '../../../../services/intelligence';
 import { mensagemDeErro } from '../../../../services/api';
 import { digitos, mascararDecimal } from '../../../../utils/mascaras';
 import { formatarDinheiro, precoAtual } from '../../../../utils/formatar';
@@ -106,8 +106,8 @@ export default function PrecificarVariacao() {
     if (custo && (Number.isNaN(custoNumero) || custoNumero <= 0)) {
       novosErros.custo = 'Informe um custo maior que zero.';
     }
-    if (margem && (margemNumero < 1 || margemNumero > 300)) {
-      novosErros.margem = 'Use uma margem entre 1% e 300%.';
+    if (margem && (margemNumero < 1 || margemNumero > 95)) {
+      novosErros.margem = 'Use uma margem entre 1% e 95%.';
     }
     setErros(novosErros);
     if (Object.keys(novosErros).length > 0) {
@@ -153,7 +153,10 @@ export default function PrecificarVariacao() {
     );
   }
 
-  const analise = resultado ? resultado.analise_financeira : undefined;
+  const custoInformado = Number(custo.replace(',', '.'));
+  const analise = resultado
+    ? resultado.analise_financeira ?? (custoInformado > 0 ? analisarPreco(resultado.previsao.preco_unitario_estimado, custoInformado, margem ? Number(margem) : undefined) : undefined)
+    : undefined;
 
   return (
     <Screen rolavel>
