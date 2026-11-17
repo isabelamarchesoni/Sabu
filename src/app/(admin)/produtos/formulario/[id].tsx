@@ -1,6 +1,6 @@
 // formulário de produto. /produtos/formulario/novo cria um produto novo; /produtos/formulario/3 edita o produto de id 3.
-import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useCallback, useContext, useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import {
@@ -8,13 +8,20 @@ import {
   salvarProduto,
   listarCategorias,
   listarTiposPele,
+  listarIngredientes,
   enviarImagemProduto,
   apagarImagemProduto,
+  TIPOS_PELE_INDICADO,
+  BASES_PRODUTO,
   type Categoria,
   type TipoPele,
+  type Ingrediente,
+  type TipoPeleIndicado,
+  type BaseProduto,
 } from '../../../../services/catalogo';
 import type { ArquivoImagem } from '../../../../services/imagem';
 import { mensagemDeErro } from '../../../../services/api';
+import { TemaContext } from '../../../../theme/TemaContext';
 import { erroDoCampo } from '../../../../utils/erros';
 import Screen from '../../../../components/ui/Screen';
 import Header from '../../../../components/ui/Header';
@@ -25,11 +32,14 @@ import Button from '../../../../components/ui/Button';
 import Notice from '../../../../components/ui/Notice';
 import ScreenState from '../../../../components/ui/ScreenState';
 import ImagePickerField from '../../../../components/ui/ImagePickerField';
+import SectionTitle from '../../../../components/ui/SectionTitle';
 
 const LIMITE_NOME = 100;
-const CAMPOS = ['nome', 'descricao', 'categorias', 'tipo_pele'];
+const LIMITE_ESSENCIA = 50;
+const CAMPOS = ['nome', 'descricao', 'categorias', 'tipo_pele', 'tipo_pele_indicado', 'base', 'essencia', 'ingredientes'];
 
 export default function FormularioProduto() {
+  const { cores } = useContext(TemaContext);
   const { id } = useLocalSearchParams<{ id: string }>();
   const criando = id === 'novo';
 
@@ -40,6 +50,13 @@ export default function FormularioProduto() {
   const [tiposPeleIds, setTiposPeleIds] = useState<number[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [tiposPele, setTiposPele] = useState<TipoPele[]>([]);
+  const [tipoPeleIndicado, setTipoPeleIndicado] = useState<TipoPeleIndicado>('TODOS');
+  const [base, setBase] = useState<BaseProduto | ''>('');
+  const [essencia, setEssencia] = useState('');
+  const [semFragrancia, setSemFragrancia] = useState(false);
+  const [vegano, setVegano] = useState(false);
+  const [ingredientesIds, setIngredientesIds] = useState<number[]>([]);
+  const [ingredientes, setIngredientes] = useState<Ingrediente[]>([]);
   const [imagemAtual, setImagemAtual] = useState<string | null>(null);
   const [imagemNova, setImagemNova] = useState<ArquivoImagem | null>(null);
   const [idCriado, setIdCriado] = useState<number | null>(null);
@@ -68,11 +85,12 @@ export default function FormularioProduto() {
 
   async function carregarOpcoes() {
     try {
-      const [listaCategorias, listaTipos] = await Promise.all([listarCategorias(), listarTiposPele()]);
+      const [listaCategorias, listaTipos, listaIngredientes] = await Promise.all([listarCategorias(), listarTiposPele(), listarIngredientes()]);
       setCategorias(listaCategorias);
       setTiposPele(listaTipos);
+      setIngredientes(listaIngredientes);
     } catch (e) {
-      setErroGeral(mensagemDeErro(e, 'Não foi possível carregar categorias e tipos de pele.'));
+      setErroGeral(mensagemDeErro(e, 'Não foi possível carregar categorias, tipos de pele e ingredientes.'));
     }
   }
 
@@ -93,6 +111,16 @@ export default function FormularioProduto() {
       setTiposPeleIds(
         produto.tipo_pele.map(function (tipo) {
           return tipo.id;
+        })
+      );
+      setTipoPeleIndicado(produto.tipo_pele_indicado);
+      setBase(produto.base);
+      setEssencia(produto.essencia);
+      setSemFragrancia(produto.sem_fragrancia);
+      setVegano(produto.vegano);
+      setIngredientesIds(
+        produto.ingredientes.map(function (ingrediente) {
+          return ingrediente.id;
         })
       );
     } catch (e) {
@@ -150,6 +178,9 @@ export default function FormularioProduto() {
     } else if (nomeLimpo.length > LIMITE_NOME) {
       novosErros.nome = `Use no máximo ${LIMITE_NOME} caracteres.`;
     }
+    if (essencia.trim().length > LIMITE_ESSENCIA) {
+      novosErros.essencia = `Use no máximo ${LIMITE_ESSENCIA} caracteres.`;
+    }
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
   }
@@ -168,6 +199,12 @@ export default function FormularioProduto() {
         esta_ativo: ativo,
         categorias: categoriasIds,
         tipo_pele: tiposPeleIds,
+        tipo_pele_indicado: tipoPeleIndicado,
+        base: base,
+        essencia: essencia.trim(),
+        sem_fragrancia: semFragrancia,
+        vegano: vegano,
+        ingredientes: ingredientesIds,
       });
 
       // 2) multipart: só depois do sucesso acima, envia a imagem
@@ -291,7 +328,7 @@ export default function FormularioProduto() {
 
         <View>
           <Select
-            rotulo="Tipos de pele"
+            rotulo="Tipos de pele (vitrine)"
             opcoes={tiposPele.map(function (tipo) {
               return { valor: tipo.id, rotulo: tipo.nome };
             })}
@@ -314,6 +351,76 @@ export default function FormularioProduto() {
         </View>
       </View>
 
+      <View style={estilos.secao}>
+        <SectionTitle titulo="Perfil para o quiz" />
+        <Text style={[estilos.ajudaSecao, { color: cores.textoApoio }]}>
+          Usado pelo quiz do Bú para recomendar este sabonete. Os ingredientes impedem que ele seja recomendado a quem tem alergia.
+        </Text>
+
+        <View style={estilos.campos}>
+          <Select
+            rotulo="Indicação principal (quiz)"
+            opcoes={TIPOS_PELE_INDICADO}
+            selecionados={[tipoPeleIndicado]}
+            aoMudar={function (valores) {
+              setTipoPeleIndicado(valores[0] as TipoPeleIndicado);
+            }}
+            erro={erros.tipo_pele_indicado}
+          />
+
+          <Select
+            rotulo="Base"
+            opcoes={[{ valor: '', rotulo: 'Não informada' }, ...BASES_PRODUTO]}
+            selecionados={[base]}
+            aoMudar={function (valores) {
+              setBase(valores[0] as BaseProduto | '');
+            }}
+            erro={erros.base}
+          />
+
+          <TextField
+            rotulo="Essência"
+            valor={essencia}
+            aoMudar={function (texto) {
+              setEssencia(texto);
+              setErros({ ...erros, essencia: '' });
+            }}
+            placeholder="Ex.: lavanda"
+            erro={erros.essencia}
+            ajuda={`Opcional. Até ${LIMITE_ESSENCIA} caracteres.`}
+            desabilitado={salvando}
+          />
+
+          <Toggle rotulo="Sem fragrância" descricao="Sabonete sem perfume adicionado." valor={semFragrancia} aoMudar={setSemFragrancia} />
+
+          <Toggle rotulo="Vegano" descricao="Sem nenhum ingrediente de origem animal." valor={vegano} aoMudar={setVegano} />
+
+          <View>
+            <Select
+              rotulo="Ingredientes"
+              opcoes={ingredientes.map(function (ingrediente) {
+                return { valor: ingrediente.id, rotulo: ingrediente.nome };
+              })}
+              selecionados={ingredientesIds}
+              aoMudar={function (valores) {
+                setIngredientesIds(valores.map(Number));
+              }}
+              multiplo
+              placeholder="Escolha os ingredientes"
+              erro={erros.ingredientes}
+            />
+            <Button
+              titulo="Criar novo ingrediente"
+              variante="texto"
+              icone="add"
+              aoPressionar={function () {
+                router.push('/ingredientes/novo');
+              }}
+            />
+          </View>
+        </View>
+      </View>
+
       <View style={estilos.acoes}>
         <Button titulo="Salvar" aoPressionar={salvar} carregando={salvando} />
         <Button
@@ -330,6 +437,14 @@ export default function FormularioProduto() {
 }
 
 const estilos = StyleSheet.create({
+  secao: {
+    marginTop: 28,
+  },
+  ajudaSecao: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 4,
+  },
   campos: {
     marginTop: 8,
     gap: 16,

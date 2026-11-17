@@ -1,7 +1,7 @@
-import { requisicao, ErroApi, type Paginado } from './api';
+import { requisicao, ErroApi } from './api';
+import { listarIngredientes as listarIngredientesCatalogo } from './catalogo';
 
 export const ROTA_RECOMENDACAO = '/recommendations/quiz/';
-export const ROTA_INGREDIENTES = '/catalog/ingredientes/';
 
 export type TipoPeleQuiz = 'seca' | 'oleosa' | 'mista' | 'normal' | 'nao_sei';
 export type Frequencia = 'sim' | 'nao' | 'as_vezes';
@@ -92,11 +92,6 @@ export type Recomendacao = {
   aviso: string;
 };
 
-type Ingrediente = {
-  id: number;
-  nome: string;
-};
-
 // O backend devolve até 3 produtos, do mais compatível para o menos. Lista vazia: nenhum sabonete passou nas regras.
 export async function recomendarProduto(respostas: RespostasQuiz): Promise<Recomendacao | null> {
   const resposta = await requisicao<RespostaRecomendacao>(ROTA_RECOMENDACAO, { metodo: 'POST', corpo: respostas, autenticado: false });
@@ -107,8 +102,8 @@ export async function recomendarProduto(respostas: RespostasQuiz): Promise<Recom
 // A alergia é enviada pelo nome do ingrediente, que é o que o backend valida.
 // A rota é paginada (25 por página); por enquanto só a primeira página é usada.
 export async function listarIngredientes(): Promise<OpcaoQuiz[]> {
-  const resposta = await requisicao<Paginado<Ingrediente>>(ROTA_INGREDIENTES, { autenticado: false });
-  return resposta.results.map(function (item) {
+  const ingredientes = await listarIngredientesCatalogo();
+  return ingredientes.map(function (item) {
     return { valor: item.nome, rotulo: item.nome };
   });
 }
