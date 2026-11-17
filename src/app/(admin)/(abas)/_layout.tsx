@@ -1,4 +1,4 @@
-// layout das abas desenha a barra de baixo com início, catalogo, estoque, compras e vendas. 
+// layout das abas desenha a barra de baixo com início, catalogo, estoque, compras, vendas e conta.
 // só as telas listadas em ABAS viram aba.
 import { useContext, type ComponentProps } from 'react';
 import { Tabs } from 'expo-router';
@@ -15,6 +15,7 @@ const ABAS: Aba[] = [
   { nome: 'estoque/index', titulo: 'Estoque', icone: 'cube-outline', iconeAtivo: 'cube' },
   { nome: 'compras/index', titulo: 'Compras', icone: 'cart-outline', iconeAtivo: 'cart' },
   { nome: 'vendas/index', titulo: 'Vendas', icone: 'receipt-outline', iconeAtivo: 'receipt' },
+  { nome: 'conta/index', titulo: 'Conta', icone: 'person-circle-outline', iconeAtivo: 'person-circle' },
 ];
 
 export default function LayoutAbas() {
