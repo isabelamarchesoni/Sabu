@@ -127,3 +127,27 @@ export async function estornarPedido(id: number, comDevolucao: boolean) {
   const acao = comDevolucao ? 'estornar_com_devolucao' : 'estornar_sem_devolucao';
   await requisicao<unknown>(`/orders/pedidos/${id}/${acao}/`, { metodo: 'POST' });
 }
+
+export type DadosEndereco = {
+  cep: string;
+  logradouro: string;
+  numero_residencia: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  sigla_estado: string;
+  observacao: string;
+};
+
+export type DadosPedido = Partial<DadosEndereco> & {
+  cliente?: number;
+  itens: { variacao: number; quantidade_item: number }[];
+};
+
+export async function criarPedido(dados: DadosPedido): Promise<Pedido> {
+  return requisicao<Pedido>('/orders/pedidos/', { metodo: 'POST', corpo: dados });
+}
+
+export async function atualizarPedido(id: number, dados: DadosEndereco): Promise<Pedido> {
+  return requisicao<Pedido>(`/orders/pedidos/${id}/`, { metodo: 'PATCH', corpo: dados });
+}

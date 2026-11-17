@@ -23,3 +23,14 @@ export async function sair() {
 export async function usuarioAtual() {
   return lerUsuario();
 }
+export type DadosAdministrador = {
+  nome: string;
+  email: string;
+  password: string;
+  telefone: string;
+  cpf_cnpj?: string;
+};
+
+export async function cadastrarAdministrador(dados: DadosAdministrador) {
+  return requisicao<{ message: string; user: { id: number; nome: string; email: string } }>('/auth/registrar_admin/', { metodo: 'POST', corpo: dados });
+}

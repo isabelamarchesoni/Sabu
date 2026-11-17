@@ -148,7 +148,7 @@ Um **modelo pré-treinado de embeddings** compara as respostas do quiz dermatol�
 | **Expo Go** no celular | versão da loja com suporte ao **SDK 58** | ver no app |
 | Python | 3.12+ (para o back-end e os modelos de ML) | `python --version` |
 
-> O front-end **não usa `requirements.txt`**: todas as bibliotecas estão no `frontend/package.json` (versões exatas no `package-lock.json`). O `npm install` instala tudo sozinho — **não instale bibliotecas à mão**.
+> O front-end **não usa `requirements.txt`**: todas as bibliotecas estão no `package.json` (versões exatas no `package-lock.json`). O `npm install` instala tudo sozinho — **não instale bibliotecas à mão**.
 
 ### Extensões do VS Code
 
@@ -165,13 +165,13 @@ Ao abrir a pasta do projeto, o VS Code avisa que há **extensões recomendadas**
 git clone https://github.com/isabelamarchesoni/Sabu.git
 ```
 ```bash
-cd Sabu/frontend
+cd Sabu
 ```
 ```bash
 npm install
 ```
 
-Crie o arquivo **`frontend/.env`** a partir do modelo **`frontend/.env.example`**:
+Crie o arquivo **`.env`** na raiz do projeto a partir do modelo **`.env.example`**:
 
 ```
 EXPO_PUBLIC_API_URL=http://IP_DO_PC:8000/api/v1
@@ -244,25 +244,29 @@ npx eas build --platform android
 Sabu/
 ├── .vscode/
 │   └── extensions.json       extensões recomendadas do VS Code
-├── backend/                  versão antiga do back-end (o atual fica em repositório separado)
-├── frontend/
-│   ├── .env.example          modelo das variáveis de ambiente
-│   ├── .nvmrc                versão do Node (22)
-│   ├── app.json
-│   ├── package.json
-│   └── src/
-│       ├── app/              rotas — cada arquivo é uma tela (Expo Router)
-│       │   ├── _layout.tsx   tema + navegação geral
-│       │   ├── index.tsx     splash
-│       │   ├── login.tsx
-│       │   ├── vitrine/      área pública (lista e página do produto)
-│       │   └── (admin)/      área do administrador (protegida pelo login)
-│       │       ├── (abas)/   início, catálogo, estoque, compras e vendas
-│       │       └── categorias/, tipos-pele/, produtos/, variacoes/ …
-│       ├── components/ui/    kit de componentes (Button, TextField, PaginatedList…)
-│       ├── services/         conversa com a API (api, sessao, catalogo, variacoes…)
-│       ├── theme/            cores e modo claro/escuro
-│       └── utils/            formatação de dinheiro, datas e erros
+├── .env.example              modelo das variáveis de ambiente
+├── .nvmrc                    versão do Node (22)
+├── app.json
+├── package.json
+├── assets/                   ícone, splash e imagens
+├── src/
+│   ├── app/                  rotas — cada arquivo é uma tela (Expo Router)
+│   │   ├── _layout.tsx       tema + navegação geral
+│   │   ├── index.tsx         splash
+│   │   ├── login.tsx
+│   │   ├── vitrine/          área pública (lista e página do produto)
+│   │   └── (admin)/          área do administrador (protegida pelo login)
+│   │       ├── (abas)/       início, catálogo, estoque, compras e vendas
+│   │       ├── categorias/, tipos-pele/, produtos/, variacoes/
+│   │       ├── materias-primas/, fichas-tecnicas/, lotes-materia-prima/, lotes-sabonetes/
+│   │       ├── movimentacoes-materia-prima/, movimentacoes-sabonetes/
+│   │       ├── fornecedores/, historico-compras/, vinculos/
+│   │       ├── clientes/, pedidos/
+│   │       └── conta/, administradores/
+│   ├── components/ui/        kit de componentes (Button, TextField, PaginatedList…)
+│   ├── services/             conversa com a API (api, sessao, catalogo, estoque, compras, vendas…)
+│   ├── theme/                cores e modo claro/escuro
+│   └── utils/                máscaras, datas e erros
 └── README.md
 ```
 
@@ -276,8 +280,8 @@ Sabu/
 - [x] Backend e API
 - [x] Vitrine pública e página do produto
 - [x] Login e área do administrador
-- [ ] Cadastro de produtos, insumos e estoque 
-- [ ] Histórico de vendas e pedidos
+- [x] Cadastro de produtos, insumos e estoque
+- [x] Histórico de vendas e pedidos
 - [ ] MVP de precificação (regressão linear)
 - [ ] Quiz dermatológico e recomendação
 - [ ] Previsão de estoque

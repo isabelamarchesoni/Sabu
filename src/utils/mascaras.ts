@@ -61,3 +61,11 @@ export function mascararDecimal(texto: string, casas: number) {
   }
   return `${partes[0]},${partes.slice(1).join('').slice(0, casas)}`;
 }
+
+export function mascararCep(texto: string) {
+  const numeros = somenteDigitos(texto).slice(0, 8);
+  if (numeros.length <= 5) {
+    return numeros;
+  }
+  return `${numeros.slice(0, 5)}-${numeros.slice(5)}`;
+}
