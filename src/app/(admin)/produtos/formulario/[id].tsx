@@ -1,9 +1,8 @@
 // formulário de produto. /produtos/formulario/novo cria um produto novo; /produtos/formulario/3 edita o produto de id 3.
-import { useCallback, useContext, useEffect, useState } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { TemaContext } from '../../../../theme/TemaContext';
 import {
   buscarProdutoAdmin,
   salvarProduto,
@@ -25,12 +24,12 @@ import Select from '../../../../components/ui/Select';
 import Button from '../../../../components/ui/Button';
 import Notice from '../../../../components/ui/Notice';
 import ScreenState from '../../../../components/ui/ScreenState';
+import ImagePickerField from '../../../../components/ui/ImagePickerField';
 
 const LIMITE_NOME = 100;
 const CAMPOS = ['nome', 'descricao', 'categorias', 'tipo_pele'];
 
 export default function FormularioProduto() {
-  const { cores } = useContext(TemaContext);
   const { id } = useLocalSearchParams<{ id: string }>();
   const criando = id === 'novo';
 
@@ -233,32 +232,7 @@ export default function FormularioProduto() {
       {erroGeral ? <Notice mensagem={erroGeral} tom="erro" /> : null}
 
       <View style={estilos.campos}>
-        <View style={estilos.imagemBloco}>
-          {previa ? (
-            <Image source={{ uri: previa }} style={[estilos.imagem, { backgroundColor: cores.borda }]} resizeMode="cover" />
-          ) : (
-            <View style={[estilos.imagem, estilos.semImagem, { backgroundColor: cores.borda }]} />
-          )}
-          <View style={estilos.imagemAcoes}>
-            <Button
-              titulo={previa ? 'Trocar imagem' : 'Escolher imagem'}
-              variante="secundario"
-              icone="image-outline"
-              desabilitado={salvando || apagandoImagem}
-              aoPressionar={escolherImagem}
-            />
-            {previa ? (
-              <Button
-                titulo="Excluir imagem"
-                variante="textoPerigo"
-                icone="trash-outline"
-                carregando={apagandoImagem}
-                desabilitado={salvando}
-                aoPressionar={removerImagem}
-              />
-            ) : null}
-          </View>
-        </View>
+        <ImagePickerField previa={previa} aoEscolher={escolherImagem} aoRemover={removerImagem} removendo={apagandoImagem} desabilitado={salvando} />
 
         <TextField
           rotulo="Nome"
@@ -359,23 +333,6 @@ const estilos = StyleSheet.create({
   campos: {
     marginTop: 8,
     gap: 16,
-  },
-  imagemBloco: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  imagem: {
-    width: 120,
-    height: 120,
-    borderRadius: 18,
-  },
-  semImagem: {
-    opacity: 0.4,
-  },
-  imagemAcoes: {
-    flex: 1,
-    gap: 8,
   },
   acoes: {
     marginTop: 28,

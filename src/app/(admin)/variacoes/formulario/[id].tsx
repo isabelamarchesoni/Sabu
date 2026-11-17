@@ -1,9 +1,8 @@
 // formulário de variação. /variacoes/formulario/novo cria (aceita ?produto=ID para já vir escolhido); /variacoes/formulario/3 edita a variação de id 3.
-import { useContext, useEffect, useState } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { TemaContext } from '../../../../theme/TemaContext';
 import { listarProdutosAdmin, type Produto } from '../../../../services/catalogo';
 import {
   buscarVariacao,
@@ -24,6 +23,7 @@ import Select from '../../../../components/ui/Select';
 import Button from '../../../../components/ui/Button';
 import Notice from '../../../../components/ui/Notice';
 import ScreenState from '../../../../components/ui/ScreenState';
+import ImagePickerField from '../../../../components/ui/ImagePickerField';
 import SectionTitle from '../../../../components/ui/SectionTitle';
 
 const LIMITE_TEXTO = 50;
@@ -40,7 +40,6 @@ function decimalParaCampo(valor: string | null) {
 }
 
 export default function FormularioVariacao() {
-  const { cores } = useContext(TemaContext);
   const { id, produto } = useLocalSearchParams<{ id: string; produto?: string }>();
   const criando = id === 'novo';
 
@@ -289,32 +288,7 @@ export default function FormularioVariacao() {
       {erroGeral ? <Notice mensagem={erroGeral} tom="erro" /> : null}
 
       <View style={estilos.campos}>
-        <View style={estilos.imagemBloco}>
-          {previa ? (
-            <Image source={{ uri: previa }} style={[estilos.imagem, { backgroundColor: cores.borda }]} resizeMode="cover" />
-          ) : (
-            <View style={[estilos.imagem, estilos.semImagem, { backgroundColor: cores.borda }]} />
-          )}
-          <View style={estilos.imagemAcoes}>
-            <Button
-              titulo={previa ? 'Trocar imagem' : 'Escolher imagem'}
-              variante="secundario"
-              icone="image-outline"
-              desabilitado={salvando || apagandoImagem}
-              aoPressionar={escolherImagem}
-            />
-            {previa ? (
-              <Button
-                titulo="Excluir imagem"
-                variante="textoPerigo"
-                icone="trash-outline"
-                carregando={apagandoImagem}
-                desabilitado={salvando}
-                aoPressionar={removerImagem}
-              />
-            ) : null}
-          </View>
-        </View>
+        <ImagePickerField previa={previa} aoEscolher={escolherImagem} aoRemover={removerImagem} removendo={apagandoImagem} desabilitado={salvando} />
 
         <Select
           rotulo="Produto"
@@ -445,23 +419,6 @@ const estilos = StyleSheet.create({
   campos: {
     marginTop: 8,
     gap: 16,
-  },
-  imagemBloco: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  imagem: {
-    width: 120,
-    height: 120,
-    borderRadius: 18,
-  },
-  semImagem: {
-    opacity: 0.4,
-  },
-  imagemAcoes: {
-    flex: 1,
-    gap: 8,
   },
   secao: {
     marginTop: 24,
