@@ -8,6 +8,7 @@ import { buscarProduto, type Produto, type Variacao } from '../../services/catal
 import { mensagemDeErro } from '../../services/api';
 import { formatarDinheiro, precoAtual, promocaoAtiva, variacoesDisponiveis } from '../../utils/formatar';
 import { linkWhatsapp, whatsappDisponivel } from '../../utils/whatsapp';
+import { mensagemPedidoVitrine } from '../../utils/mensagens';
 import Screen from '../../components/ui/Screen';
 import Chip from '../../components/ui/Chip';
 import SectionTitle from '../../components/ui/SectionTitle';
@@ -25,6 +26,8 @@ export default function PaginaProduto() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const [erroWhatsapp, setErroWhatsapp] = useState('');
+  const [variacaoId, setVariacaoId] = useState<number | null>(null);
+  const [quantidade, setQuantidade] = useState(1);
 
   useEffect(function () {
     carregar();
@@ -34,7 +37,13 @@ export default function PaginaProduto() {
     setCarregando(true);
     setErro('');
     try {
-      setProduto(await buscarProduto(Number(id)));
+      const dados = await buscarProduto(Number(id));
+      setProduto(dados);
+      const primeira = variacoesDisponiveis(dados).find(function (variacao) {
+        return variacao.quantidade_estoque > 0;
+      });
+      setVariacaoId(primeira ? primeira.id : null);
+      setQuantidade(1);
     } catch (e) {
       setErro(mensagemDeErro(e, 'Não foi possível carregar este sabonete.'));
     } finally {
@@ -63,8 +72,12 @@ export default function PaginaProduto() {
       return;
     }
     setErroWhatsapp('');
+    const escolhida = variacoesDisponiveis(produto).find(function (variacao) {
+      return variacao.id === variacaoId;
+    });
+    const mensagem = escolhida ? mensagemPedidoVitrine(produto, escolhida, quantidade) : `🧼 Oi! Tenho interesse no sabonete *${produto.nome}* da Sabu. Ele vai voltar ao estoque? 🐸`;
     try {
-      await Linking.openURL(linkWhatsapp(`Estou interessado no produto '${produto.nome}'`));
+      await Linking.openURL(linkWhatsapp(mensagem));
     } catch {
       setErroWhatsapp('Não foi possível abrir o WhatsApp neste aparelho.');
     }
@@ -73,19 +86,30 @@ export default function PaginaProduto() {
   function renderizarVariacao(variacao: Variacao) {
     const emPromocao = promocaoAtiva(variacao);
     const temEstoque = variacao.quantidade_estoque > 0;
+    const selecionada = variacao.id === variacaoId;
 
     return (
-      <View
+      <Pressable
         key={variacao.id}
+        onPress={function () {
+          setVariacaoId(variacao.id);
+          setQuantidade(1);
+        }}
+        disabled={!temEstoque}
+        accessibilityRole="radio"
+        accessibilityState={{ selected: selecionada, disabled: !temEstoque }}
         style={[
           estilos.variacao,
           {
             backgroundColor: cores.cartao,
-            borderColor: cores.borda,
+            borderColor: selecionada ? cores.botao : cores.borda,
+            borderWidth: selecionada ? 2 : 1,
+            opacity: temEstoque ? 1 : 0.6,
             boxShadow: `0px 4px 12px ${cores.sombraCartao}`,
           },
         ]}
       >
+        <Ionicons name={selecionada ? 'radio-button-on' : 'radio-button-off'} size={22} color={selecionada ? cores.botao : cores.placeholder} />
         <View style={estilos.variacaoInfo}>
           <Text style={[estilos.variacaoNome, { color: cores.texto }]}>{variacao.nome}</Text>
           {variacao.peso_gramas ? (
@@ -102,7 +126,7 @@ export default function PaginaProduto() {
           ) : null}
           <Text style={[estilos.preco, { color: cores.texto }]}>{formatarDinheiro(precoAtual(variacao))}</Text>
         </View>
-      </View>
+      </Pressable>
     );
   }
 
@@ -137,10 +161,50 @@ export default function PaginaProduto() {
 
   const variacoes = variacoesDisponiveis(produto);
 
+  const escolhida = variacoes.find(function (variacao) {
+    return variacao.id === variacaoId;
+  });
+  const limite = escolhida ? Math.min(escolhida.quantidade_estoque, 99) : 1;
+
   const rodape = whatsappDisponivel() ? (
     <View style={estilos.rodape}>
       {erroWhatsapp ? <Notice mensagem={erroWhatsapp} tom="erro" /> : null}
-      <Button titulo="Quero este sabonete" icone="logo-whatsapp" aoPressionar={abrirWhatsapp} />
+      {escolhida ? (
+        <View style={estilos.linhaPedido}>
+          <View style={[estilos.quantidade, { borderColor: cores.bordaForte, backgroundColor: cores.cartao }]}>
+            <Pressable
+              onPress={function () {
+                setQuantidade(Math.max(1, quantidade - 1));
+              }}
+              disabled={quantidade <= 1}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel="Diminuir quantidade"
+              style={estilos.botaoQuantidade}
+            >
+              <Ionicons name="remove" size={20} color={quantidade <= 1 ? cores.placeholder : cores.texto} />
+            </Pressable>
+            <Text style={[estilos.numeroQuantidade, { color: cores.texto }]}>{quantidade}</Text>
+            <Pressable
+              onPress={function () {
+                setQuantidade(Math.min(limite, quantidade + 1));
+              }}
+              disabled={quantidade >= limite}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel="Aumentar quantidade"
+              style={estilos.botaoQuantidade}
+            >
+              <Ionicons name="add" size={20} color={quantidade >= limite ? cores.placeholder : cores.texto} />
+            </Pressable>
+          </View>
+          <View style={estilos.botaoPedir}>
+            <Button titulo={`Pedir · ${formatarDinheiro(precoAtual(escolhida) * quantidade)}`} icone="logo-whatsapp" aoPressionar={abrirWhatsapp} />
+          </View>
+        </View>
+      ) : (
+        <Button titulo="Avisar quando voltar" icone="logo-whatsapp" variante="secundario" aoPressionar={abrirWhatsapp} />
+      )}
     </View>
   ) : undefined;
 
@@ -194,7 +258,7 @@ export default function PaginaProduto() {
       ) : null}
 
       <View style={estilos.secao}>
-        <SectionTitle titulo="Opções" />
+        <SectionTitle titulo="Escolha a opção" />
         {variacoes.length > 0 ? (
           variacoes.map(renderizarVariacao)
         ) : (
@@ -283,5 +347,33 @@ const estilos = StyleSheet.create({
   },
   rodape: {
     gap: 10,
+  },
+  linhaPedido: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  quantidade: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 4,
+  },
+  botaoQuantidade: {
+    width: 36,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  numeroQuantidade: {
+    minWidth: 24,
+    fontSize: 17,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  botaoPedir: {
+    flex: 1,
   },
 });

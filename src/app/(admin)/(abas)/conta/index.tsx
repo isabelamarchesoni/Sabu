@@ -165,19 +165,20 @@ const estilos = StyleSheet.create({
   grade: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    justifyContent: 'space-between',
+    rowGap: 12,
   },
   opcao: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: '23%',
+    aspectRatio: 1,
+    borderRadius: 999,
     borderWidth: 3,
     padding: 2,
   },
   opcaoImagem: {
     width: '100%',
     height: '100%',
-    borderRadius: 32,
+    borderRadius: 999,
   },
   iniciais: {
     fontSize: 20,

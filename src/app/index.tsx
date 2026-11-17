@@ -2,16 +2,17 @@ import { useContext, useEffect, useRef } from 'react';
 import { View, Text, Animated, Easing, Platform, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { TemaContext } from '../theme/TemaContext';
-import VitoriaRegia from '../components/VitoriaRegia';
 
-const TAMANHO_FOLHA = 140;
+const LARGURA_BU = 170;
+const ALTURA_BU = Math.round((LARGURA_BU * 435) / 400);
+const TAMANHO_CIRCULO = 140;
 const DRIVER_NATIVO = Platform.OS !== 'web';
 
 export default function Splash() {
   const { cores } = useContext(TemaContext);
 
   const crescimento = useRef(new Animated.Value(0)).current;
-  const aberturaFlor = useRef(new Animated.Value(0)).current;
+  const piscada = useRef(new Animated.Value(0)).current;
   const expansao = useRef(new Animated.Value(0)).current;
   const marca = useRef(new Animated.Value(0)).current;
 
@@ -23,10 +24,16 @@ export default function Splash() {
         easing: Easing.out(Easing.back(1.5)),
         useNativeDriver: DRIVER_NATIVO,
       }),
-      Animated.timing(aberturaFlor, {
+      Animated.delay(250),
+      Animated.timing(piscada, {
         toValue: 1,
-        duration: 600,
-        easing: Easing.out(Easing.ease),
+        duration: 70,
+        useNativeDriver: DRIVER_NATIVO,
+      }),
+      Animated.delay(260),
+      Animated.timing(piscada, {
+        toValue: 0,
+        duration: 90,
         useNativeDriver: DRIVER_NATIVO,
       }),
       Animated.delay(250),
@@ -43,19 +50,21 @@ export default function Splash() {
       }),
       Animated.delay(900),
     ]).start(function () {
-      router.replace('/login');
+      router.replace('/vitrine');
     });
   }, []);
 
-  const escalaFolha = crescimento.interpolate({ inputRange: [0, 1], outputRange: [0.15, 1] });
-  const giroFolha = crescimento.interpolate({ inputRange: [0, 1], outputRange: ['-40deg', '0deg'] });
+  const escalaBu = crescimento.interpolate({ inputRange: [0, 1], outputRange: [0.15, 1] });
+  const giroBu = crescimento.interpolate({ inputRange: [0, 1], outputRange: ['-12deg', '0deg'] });
+  const olhoAberto = piscada.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
   const escalaCirculo = expansao.interpolate({ inputRange: [0, 1], outputRange: [0.01, 14] });
   const subidaMarca = marca.interpolate({ inputRange: [0, 1], outputRange: [12, 0] });
 
   return (
-    <View style={[styles.tela, { backgroundColor: cores.fundo }]} accessibilityLabel="Sabu, abrindo o aplicativo">
-      <Animated.View style={{ transform: [{ scale: escalaFolha }, { rotate: giroFolha }] }}>
-        <VitoriaRegia tamanho={TAMANHO_FOLHA} cores={cores} escalaFlor={aberturaFlor} />
+    <View style={[styles.tela, { backgroundColor: cores.fundo }]} accessibilityLabel="Sabu, abrindo o aplicativo. O sapinho Bú pisca para você.">
+      <Animated.View style={[styles.bu, { transform: [{ scale: escalaBu }, { rotate: giroBu }] }]}>
+        <Animated.Image source={require('../../assets/bu/bu-cabeca.png')} style={[styles.imagemBu, { opacity: olhoAberto }]} />
+        <Animated.Image source={require('../../assets/bu/bu-piscando.png')} style={[styles.imagemBu, styles.sobreposta, { opacity: piscada }]} />
       </Animated.View>
 
       <View style={styles.camadaCentral} pointerEvents="none">
@@ -84,7 +93,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-    camadaCentral: {
+  camadaCentral: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -93,17 +102,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  bu: {
+    width: LARGURA_BU,
+    height: ALTURA_BU,
+  },
+  imagemBu: {
+    width: LARGURA_BU,
+    height: ALTURA_BU,
+  },
+  sobreposta: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
   circulo: {
-    width: TAMANHO_FOLHA,
-    height: TAMANHO_FOLHA,
-    borderRadius: TAMANHO_FOLHA / 2,
+    width: TAMANHO_CIRCULO,
+    height: TAMANHO_CIRCULO,
+    borderRadius: TAMANHO_CIRCULO / 2,
   },
   marca: {
-    fontSize: 44,
-    fontWeight: 'bold',
+    fontFamily: 'Gaegu_700Bold',
+    fontSize: 64,
+    lineHeight: 70,
   },
   slogan: {
-    fontSize: 15,
-    marginTop: 8,
+    fontFamily: 'Gaegu_400Regular',
+    fontSize: 24,
   },
 });

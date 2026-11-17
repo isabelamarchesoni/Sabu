@@ -11,6 +11,7 @@ import SectionTitle from '../../components/ui/SectionTitle';
 import PaginatedList from '../../components/ui/PaginatedList';
 import ProductCard from '../../components/ui/ProductCard';
 import ThemeToggle from '../../components/ui/ThemeToggle';
+import QuizBanner from '../../components/ui/QuizBanner';
 
 export default function Vitrine() {
   const { cores } = useContext(TemaContext);
@@ -50,11 +51,7 @@ export default function Vitrine() {
   }
 
   function irParaLogin() {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/login');
-    }
+    router.push('/login');
   }
 
   return (
@@ -154,7 +151,16 @@ export default function Vitrine() {
             );
           }}
           colunas={2}
-          cabecalho={<SectionTitle titulo="Produtos" />}
+          cabecalho={
+            <View>
+              <QuizBanner
+                aoPressionar={function () {
+                  router.push('/quiz');
+                }}
+              />
+              <SectionTitle titulo="Produtos" />
+            </View>
+          }
           mensagemVazio="Nenhum sabonete encontrado com esses filtros."
         />
       </View>
