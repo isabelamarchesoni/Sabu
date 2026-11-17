@@ -5,6 +5,7 @@ import { listarClientes, listarPedidos, SITUACOES_PEDIDO, STATUS_PEDIDO, type Cl
 import { formatarDinheiro } from '../../../utils/formatar';
 import { formatarData, lerData, paraDataApi } from '../../../utils/datas';
 import { mascararData, mascararDecimal } from '../../../utils/mascaras';
+import { pedidoTemDesconto } from '../../../utils/desconto';
 import Screen from '../../../components/ui/Screen';
 import Header from '../../../components/ui/Header';
 import Select from '../../../components/ui/Select';
@@ -240,13 +241,15 @@ export default function ListaPedidos() {
           }}
           renderizarItem={function (pedido) {
             const nomeCliente = pedido.cliente === null ? 'Sem cliente' : nomesClientes[pedido.cliente] ?? `Cliente ${pedido.cliente}`;
+            const quantidadeItens = `${pedido.itens.length} ${pedido.itens.length === 1 ? 'item' : 'itens'}`;
             return (
               <View style={estilos.item}>
                 <ListItem
                   titulo={`Pedido #${pedido.id} · ${nomeCliente}`}
-                  subtitulo={`${formatarData(pedido.criado_em)} · ${pedido.itens.length} ${pedido.itens.length === 1 ? 'item' : 'itens'}`}
+                  subtitulo={`${formatarData(pedido.criado_em)} · ${quantidadeItens}`}
                   detalhe={formatarDinheiro(pedido.valor_total)}
                   selo={SITUACOES_PEDIDO[pedido.status]}
+                  selosExtras={pedidoTemDesconto(pedido) ? [{ texto: 'Desconto', tom: 'destaque' }] : undefined}
                   aoPressionar={function () {
                     router.push(`/pedidos/${pedido.id}`);
                   }}
