@@ -57,12 +57,29 @@ export default function PrecificarVariacao() {
   const [carregando, setCarregando] = useState(true);
   const [falhouCarregar, setFalhouCarregar] = useState(false);
   const [calculando, setCalculando] = useState(false);
+  const [mostrarCaracteristicas, setMostrarCaracteristicas] = useState(false);
+  const [calculouAoAbrir, setCalculouAoAbrir] = useState(false);
 
   useEffect(
     function () {
       carregar();
     },
     [id]
+  );
+
+  useEffect(
+    function () {
+      if (carregando || !variacao || calculouAoAbrir) {
+        return;
+      }
+      setCalculouAoAbrir(true);
+      if (peso) {
+        calcular();
+      } else {
+        setMostrarCaracteristicas(true);
+      }
+    },
+    [carregando, variacao]
   );
 
   async function carregar() {
@@ -102,6 +119,7 @@ export default function PrecificarVariacao() {
     const margemNumero = Number(margem);
     if (!peso || pesoNumero < 1) {
       novosErros.peso = 'Informe o peso em gramas.';
+      setMostrarCaracteristicas(true);
     }
     if (custo && (Number.isNaN(custoNumero) || custoNumero <= 0)) {
       novosErros.custo = 'Informe um custo maior que zero.';
@@ -203,81 +221,93 @@ export default function PrecificarVariacao() {
 
       {erroGeral ? <Notice mensagem={erroGeral} tom="erro" /> : null}
 
-      <View style={estilos.secao}>
-        <SectionTitle titulo="Características do sabonete" />
-        <TextField
-          rotulo="Peso"
-          valor={peso}
-          aoMudar={function (texto) {
-            setPeso(digitos(texto).slice(0, 5));
-          }}
-          placeholder="Ex.: 90"
-          erro={erros.peso}
-          sufixo="g"
-          teclado="number-pad"
-          desabilitado={calculando}
-        />
-        <Select
-          rotulo="Formato"
-          opcoes={opcoes(OPCOES_FORMATO)}
-          selecionados={[formato]}
-          aoMudar={function (valores) {
-            if (valores.length > 0) {
-              setFormato(String(valores[0]));
-            }
-          }}
-        />
-        <Select
-          rotulo="Tipo de sabonete"
-          opcoes={opcoes(OPCOES_TIPO_SABONETE)}
-          selecionados={[tipoSabonete]}
-          aoMudar={function (valores) {
-            if (valores.length > 0) {
-              setTipoSabonete(String(valores[0]));
-            }
-          }}
-        />
-        <Select
-          rotulo="Tipo de pele"
-          opcoes={opcoes(OPCOES_TIPO_PELE)}
-          selecionados={[tipoPele]}
-          aoMudar={function (valores) {
-            if (valores.length > 0) {
-              setTipoPele(String(valores[0]));
-            }
-          }}
-        />
-        <Select
-          rotulo="Base"
-          opcoes={opcoes(OPCOES_BASE_SABONETE)}
-          selecionados={[base]}
-          aoMudar={function (valores) {
-            if (valores.length > 0) {
-              setBase(String(valores[0]));
-            }
-          }}
-        />
-        <Select
-          rotulo="Embalagem"
-          opcoes={opcoes(OPCOES_EMBALAGEM)}
-          selecionados={[embalagem]}
-          aoMudar={function (valores) {
-            if (valores.length > 0) {
-              setEmbalagem(String(valores[0]));
-            }
-          }}
-        />
-        <Select
-          rotulo="Tipo de vendedor"
-          opcoes={opcoes(OPCOES_TIPO_VENDEDOR)}
-          selecionados={[tipoVendedor]}
-          aoMudar={function (valores) {
-            if (valores.length > 0) {
-              setTipoVendedor(String(valores[0]));
-            }
+      <View style={estilos.alternar}>
+        <Button
+          titulo={mostrarCaracteristicas ? 'Esconder características' : `Ajustar características (${peso || '?'} g · ${formato} · ${tipoSabonete})`}
+          variante="texto"
+          icone={mostrarCaracteristicas ? 'chevron-up' : 'options-outline'}
+          aoPressionar={function () {
+            setMostrarCaracteristicas(!mostrarCaracteristicas);
           }}
         />
       </View>
+
+      {mostrarCaracteristicas ? (
+        <View style={estilos.secao}>
+          <TextField
+            rotulo="Peso"
+            valor={peso}
+            aoMudar={function (texto) {
+              setPeso(digitos(texto).slice(0, 5));
+            }}
+            placeholder="Ex.: 90"
+            erro={erros.peso}
+            sufixo="g"
+            teclado="number-pad"
+            desabilitado={calculando}
+          />
+          <Select
+            rotulo="Formato"
+            opcoes={opcoes(OPCOES_FORMATO)}
+            selecionados={[formato]}
+            aoMudar={function (valores) {
+              if (valores.length > 0) {
+                setFormato(String(valores[0]));
+              }
+            }}
+          />
+          <Select
+            rotulo="Tipo de sabonete"
+            opcoes={opcoes(OPCOES_TIPO_SABONETE)}
+            selecionados={[tipoSabonete]}
+            aoMudar={function (valores) {
+              if (valores.length > 0) {
+                setTipoSabonete(String(valores[0]));
+              }
+            }}
+          />
+          <Select
+            rotulo="Tipo de pele"
+            opcoes={opcoes(OPCOES_TIPO_PELE)}
+            selecionados={[tipoPele]}
+            aoMudar={function (valores) {
+              if (valores.length > 0) {
+                setTipoPele(String(valores[0]));
+              }
+            }}
+          />
+          <Select
+            rotulo="Base"
+            opcoes={opcoes(OPCOES_BASE_SABONETE)}
+            selecionados={[base]}
+            aoMudar={function (valores) {
+              if (valores.length > 0) {
+                setBase(String(valores[0]));
+              }
+            }}
+          />
+          <Select
+            rotulo="Embalagem"
+            opcoes={opcoes(OPCOES_EMBALAGEM)}
+            selecionados={[embalagem]}
+            aoMudar={function (valores) {
+              if (valores.length > 0) {
+                setEmbalagem(String(valores[0]));
+              }
+            }}
+          />
+          <Select
+            rotulo="Tipo de vendedor"
+            opcoes={opcoes(OPCOES_TIPO_VENDEDOR)}
+            selecionados={[tipoVendedor]}
+            aoMudar={function (valores) {
+              if (valores.length > 0) {
+                setTipoVendedor(String(valores[0]));
+              }
+            }}
+          />
+        </View>
+      ) : null}
 
       <View style={estilos.secao}>
         <SectionTitle titulo="Custo e margem (opcional)" />
@@ -324,6 +354,10 @@ export default function PrecificarVariacao() {
 }
 
 const estilos = StyleSheet.create({
+  alternar: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
   resultado: {
     gap: 12,
     marginTop: 8,
