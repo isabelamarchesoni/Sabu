@@ -72,7 +72,7 @@ export default function Select({ rotulo, opcoes, selecionados, aoMudar, multiplo
         <Ionicons name="chevron-down" size={20} color={cores.textoApoio} />
       </TouchableOpacity>
 
-      {erro && <Text style={[styles.erro, { color: cores.erro }]}>{erro}</Text>}
+      {!!erro && <Text style={[styles.erro, { color: cores.erro }]}>{erro}</Text>}
 
       <Modal visible={aberto} transparent animationType="slide" onRequestClose={fechar}>
         <View style={styles.fundoModal}>
