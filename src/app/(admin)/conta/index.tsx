@@ -1,9 +1,10 @@
 import { useContext, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { TemaContext } from '../../../theme/TemaContext';
 import { usuarioAtual, sair } from '../../../services/autenticacao';
 import type { Usuario } from '../../../services/sessao';
+import { AVATARES, avatarPorChave, lerAvatar, salvarAvatar } from '../../../utils/avatar';
 import Screen from '../../../components/ui/Screen';
 import Header from '../../../components/ui/Header';
 import ThemeToggle from '../../../components/ui/ThemeToggle';
@@ -24,6 +25,7 @@ export default function Conta() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [confirmandoSaida, setConfirmandoSaida] = useState(false);
   const [saindo, setSaindo] = useState(false);
+  const [avatar, setAvatar] = useState<string | null>(null);
 
   useEffect(function () {
     carregar();
@@ -31,6 +33,12 @@ export default function Conta() {
 
   async function carregar() {
     setUsuario(await usuarioAtual());
+    setAvatar(await lerAvatar());
+  }
+
+  async function escolherAvatar(chave: string) {
+    setAvatar(chave);
+    await salvarAvatar(chave);
   }
 
   async function confirmarSaida() {
@@ -40,17 +48,47 @@ export default function Conta() {
     router.replace('/login');
   }
 
+  const escolhido = avatarPorChave(avatar);
+
   return (
     <Screen rolavel>
       <Header titulo="Minha conta" voltar acoes={<ThemeToggle />} />
 
       <View style={[estilos.perfil, { backgroundColor: cores.cartao, borderColor: cores.borda }]}>
-        <View style={[estilos.avatar, { backgroundColor: cores.botao }]}>
-          <Text style={[estilos.iniciais, { color: cores.botaoTexto }]}>{usuario ? iniciais(usuario.nome) : ''}</Text>
-        </View>
+        {escolhido ? (
+          <Image source={escolhido.imagem} style={[estilos.avatar, { borderColor: cores.borda }]} accessibilityLabel={`Sapinho ${escolhido.nome}`} />
+        ) : (
+          <View style={[estilos.avatar, { backgroundColor: cores.botao }]}>
+            <Text style={[estilos.iniciais, { color: cores.botaoTexto }]}>{usuario ? iniciais(usuario.nome) : ''}</Text>
+          </View>
+        )}
         <View style={estilos.textos}>
           <Text style={[estilos.nome, { color: cores.texto }]}>{usuario ? usuario.nome : ''}</Text>
           <Text style={[estilos.cargo, { color: cores.textoApoio }]}>{usuario && usuario.cargo === 'ADMIN' ? 'Administrador' : usuario ? usuario.cargo : ''}</Text>
+        </View>
+      </View>
+
+      <View style={estilos.secao}>
+        <SectionTitle titulo="Escolha seu sapinho" />
+        <Text style={[estilos.ajuda, { color: cores.textoApoio }]}>O Bú, mascote da Sabu, vira a sua foto de perfil.</Text>
+        <View style={estilos.grade}>
+          {AVATARES.map(function (opcao) {
+            const selecionado = opcao.chave === avatar;
+            return (
+              <Pressable
+                key={opcao.chave}
+                onPress={function () {
+                  escolherAvatar(opcao.chave);
+                }}
+                accessibilityRole="button"
+                accessibilityState={{ selected: selecionado }}
+                accessibilityLabel={`Sapinho ${opcao.nome}`}
+                style={[estilos.opcao, { borderColor: selecionado ? cores.botao : 'transparent' }]}
+              >
+                <Image source={opcao.imagem} style={estilos.opcaoImagem} />
+              </Pressable>
+            );
+          })}
         </View>
       </View>
 
@@ -114,11 +152,32 @@ const estilos = StyleSheet.create({
     marginTop: 8,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  ajuda: {
+    fontSize: 14,
+  },
+  grade: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  opcao: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 3,
+    padding: 2,
+  },
+  opcaoImagem: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 32,
   },
   iniciais: {
     fontSize: 20,

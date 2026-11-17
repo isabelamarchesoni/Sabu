@@ -70,7 +70,7 @@ export default function Splash() {
       <View style={styles.camadaCentral} pointerEvents="none">
         <Animated.View style={{ opacity: marca, transform: [{ translateY: subidaMarca }], alignItems: 'center' }}>
           <Text style={[styles.marca, { color: cores.splashTexto }]}>Sabu</Text>
-          <Text style={[styles.slogan, { color: cores.splashTexto }]}>cuidado em cada sabonete</Text>
+          <Text style={[styles.slogan, { color: cores.splashTexto }]}>feito pra cuidar de tu</Text>
         </Animated.View>
       </View>
     </View>

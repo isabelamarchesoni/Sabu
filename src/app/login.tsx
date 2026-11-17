@@ -16,8 +16,6 @@ export default function Login() {
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
 
-  const opacidadeFolhas = modoEscuro ? 0.85 : 1;
-
   useEffect(function () {
     verificarSessao();
   }, []);
@@ -48,18 +46,6 @@ export default function Login() {
 
   return (
     <KeyboardAvoidingView style={[styles.tela, { backgroundColor: cores.fundo }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={[styles.decoracao, { opacity: opacidadeFolhas }]}>
-        <View style={styles.folhaTopo}>
-          <VitoriaRegia tamanho={190} cores={cores} mostrarFlor={false} giro={75} />
-        </View>
-        <View style={styles.folhaGrande}>
-          <VitoriaRegia tamanho={300} cores={cores} mostrarFlor={false} giro={75} />
-        </View>
-        <View style={styles.folhaPequena}>
-          <VitoriaRegia tamanho={140} cores={cores} mostrarFlor={false} giro={75} />
-        </View>
-      </View>
-
       <TouchableOpacity
         style={[styles.botaoTema, { backgroundColor: cores.superficie, borderColor: cores.borda }]}
         onPress={alternarTema}
@@ -142,29 +128,6 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: 'hidden',
   },
-  decoracao: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    pointerEvents: 'none',
-  },
-  folhaTopo: {
-    position: 'absolute',
-    top: -60,
-    left: -70,
-  },
-  folhaGrande: {
-    position: 'absolute',
-    right: -90,
-    bottom: -70,
-  },
-  folhaPequena: {
-    position: 'absolute',
-    left: -50,
-    bottom: 60,
-  },
   botaoTema: {
     position: 'absolute',
     top: 48,
@@ -182,7 +145,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 28,
     paddingTop: 96,
-    paddingBottom: 180,
+    paddingBottom: 48,
   },
   cabecalho: {
     alignItems: 'center',
