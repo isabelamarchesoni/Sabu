@@ -7,9 +7,10 @@ import type { Variacao } from '../../../services/catalogo';
 import { buscarVariacao } from '../../../services/variacoes';
 import { buscarCliente, buscarPedido, cancelarPedido, concluirPedido, estornarPedido, SITUACOES_PEDIDO, type Cliente, type Pedido } from '../../../services/vendas';
 import { ErroApi, mensagemDeErro } from '../../../services/api';
-import { formatarDinheiro, paraNumero } from '../../../utils/formatar';
+import { formatarDinheiro } from '../../../utils/formatar';
 import { formatarDataHora } from '../../../utils/datas';
 import { mascararTelefone } from '../../../utils/mascaras';
+import { paraCentavos, pedidoTemDesconto, rotuloDesconto } from '../../../utils/desconto';
 import Screen from '../../../components/ui/Screen';
 import Header from '../../../components/ui/Header';
 import Badge from '../../../components/ui/Badge';
@@ -196,6 +197,7 @@ export default function DetalhePedido() {
   const endereco = linhasEndereco(pedido);
   const situacao = SITUACOES_PEDIDO[pedido.status];
   const configuracao = acaoPendente ? ACOES[acaoPendente] : null;
+  const temDesconto = pedidoTemDesconto(pedido);
 
   return (
     <Screen rolavel>
@@ -207,6 +209,12 @@ export default function DetalhePedido() {
       <View style={estilos.topo}>
         <Text style={[estilos.total, { color: cores.texto }]}>{formatarDinheiro(pedido.valor_total)}</Text>
         <Badge texto={situacao.texto} tom={situacao.tom} />
+      </View>
+
+      <View style={[estilos.cartao, { backgroundColor: cores.cartao, borderColor: cores.borda }]}>
+        {linha('Subtotal', formatarDinheiro(pedido.valor_subtotal))}
+        {temDesconto ? linha(rotuloDesconto(pedido.tipo_desconto, pedido.desconto), `− ${formatarDinheiro(pedido.valor_desconto)}`) : null}
+        {linha('Total', formatarDinheiro(pedido.valor_total))}
       </View>
 
       <View style={[estilos.cartao, { backgroundColor: cores.cartao, borderColor: cores.borda }]}>
@@ -255,13 +263,13 @@ export default function DetalhePedido() {
         />
         {pedido.itens.map(function (item) {
           const variacao = variacoes[item.variacao];
-          const subtotal = paraNumero(item.valor_unitario) * item.quantidade_item;
+          const descontoItem = paraCentavos(item.valor_desconto) > 0 ? ` · Desconto − ${formatarDinheiro(item.valor_desconto)}` : '';
           return (
             <ListItem
               key={item.id}
               titulo={variacao ? variacao.nome : `Variação ${item.variacao}`}
-              subtitulo={`${variacao ? `${variacao.sku} · ` : ''}${item.quantidade_item} × ${formatarDinheiro(item.valor_unitario)}`}
-              detalhe={formatarDinheiro(subtotal)}
+              subtitulo={`${variacao ? `${variacao.sku} · ` : ''}${item.quantidade_item} × ${formatarDinheiro(item.valor_unitario)}${descontoItem}`}
+              detalhe={formatarDinheiro(item.valor_final)}
               aoPressionar={function () {
                 router.push(`/variacoes/${item.variacao}`);
               }}
