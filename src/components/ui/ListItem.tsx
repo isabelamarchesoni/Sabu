@@ -4,17 +4,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { TemaContext } from '../../theme/TemaContext';
 import Badge, { type TomBadge } from './Badge';
 
+type Selo = { texto: string; tom?: TomBadge };
+
 type Props = {
   titulo: string;
   subtitulo?: string;
   detalhe?: string;
   imagem?: string | null;
-  selo?: { texto: string; tom?: TomBadge };
+  selo?: Selo;
+  selosExtras?: Selo[];
   aoPressionar?: () => void;
 };
 
-export default function ListItem({ titulo, subtitulo, detalhe, imagem, selo, aoPressionar }: Props) {
+export default function ListItem({ titulo, subtitulo, detalhe, imagem, selo, selosExtras, aoPressionar }: Props) {
   const { cores } = useContext(TemaContext);
+  const selos: Selo[] = [...(selo ? [selo] : []), ...(selosExtras ?? [])];
 
   return (
     <TouchableOpacity
@@ -36,15 +40,21 @@ export default function ListItem({ titulo, subtitulo, detalhe, imagem, selo, aoP
         <Text style={[styles.titulo, { color: cores.texto }]} numberOfLines={1}>
           {titulo}
         </Text>
-        {subtitulo && (
+        {subtitulo ? (
           <Text style={[styles.subtitulo, { color: cores.textoApoio }]} numberOfLines={2}>
             {subtitulo}
           </Text>
+        ) : null}
+        {selos.length > 0 && (
+          <View style={styles.selos}>
+            {selos.map(function (item) {
+              return <Badge key={item.texto} texto={item.texto} tom={item.tom} />;
+            })}
+          </View>
         )}
-        {selo && <Badge texto={selo.texto} tom={selo.tom} />}
       </View>
 
-      {detalhe && <Text style={[styles.detalhe, { color: cores.texto }]}>{detalhe}</Text>}
+      {detalhe ? <Text style={[styles.detalhe, { color: cores.texto }]}>{detalhe}</Text> : null}
       {aoPressionar && <Ionicons name="chevron-forward" size={20} color={cores.textoApoio} />}
     </TouchableOpacity>
   );
@@ -75,6 +85,12 @@ const styles = StyleSheet.create({
   },
   subtitulo: {
     fontSize: 13,
+  },
+  selos: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 6,
   },
   detalhe: {
     fontSize: 15,
