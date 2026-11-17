@@ -22,6 +22,8 @@ export default function PerguntasQuiz() {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState('');
   const [indisponivel, setIndisponivel] = useState(false);
+  const [semResultado, setSemResultado] = useState(false);
+  const [ingredientesCarregados, setIngredientesCarregados] = useState(false);
 
   useEffect(function () {
     carregarIngredientes();
@@ -32,6 +34,8 @@ export default function PerguntasQuiz() {
       setIngredientes(await listarIngredientes());
     } catch {
       setIngredientesIndisponiveis(true);
+    } finally {
+      setIngredientesCarregados(true);
     }
   }
 
@@ -63,6 +67,7 @@ export default function PerguntasQuiz() {
   function voltar() {
     setErro('');
     setIndisponivel(false);
+    setSemResultado(false);
     if (etapa === 0) {
       router.back();
     } else {
@@ -73,6 +78,7 @@ export default function PerguntasQuiz() {
   async function enviar() {
     setErro('');
     setIndisponivel(false);
+    setSemResultado(false);
     const completas = respostas as RespostasQuiz;
     const resumo = PERGUNTAS.filter(function (item) {
       return item.campo !== 'alergia_ingrediente';
@@ -90,12 +96,15 @@ export default function PerguntasQuiz() {
     setEnviando(true);
     try {
       const recomendacao = await recomendarProduto({ ...completas, alergia_ingrediente: alergias });
+      if (!recomendacao) {
+        setSemResultado(true);
+        return;
+      }
       router.replace({
         pathname: '/quiz/resultado',
         params: {
           produto: String(recomendacao.produtoId),
-          variacao: recomendacao.variacaoId ? String(recomendacao.variacaoId) : '',
-          motivo: recomendacao.motivo,
+          aviso: recomendacao.aviso,
           resumo: JSON.stringify(resumo),
         },
       });
@@ -127,8 +136,10 @@ export default function PerguntasQuiz() {
         <View style={estilos.alergias}>
           {ingredientesIndisponiveis ? (
             <Notice mensagem="A lista de ingredientes ainda não está disponível. Pode seguir sem marcar." tom="sucesso" />
-          ) : ingredientes.length === 0 ? (
+          ) : !ingredientesCarregados ? (
             <Text style={[estilos.ajuda, { color: cores.textoApoio }]}>Carregando ingredientes…</Text>
+          ) : ingredientes.length === 0 ? (
+            <Text style={[estilos.ajuda, { color: cores.textoApoio }]}>Nenhum ingrediente cadastrado. Pode seguir sem marcar.</Text>
           ) : (
             <View style={estilos.chips}>
               {ingredientes.map(function (opcao) {
@@ -174,9 +185,16 @@ export default function PerguntasQuiz() {
         </View>
       )}
 
-      {indisponivel ? (
+      {indisponivel || semResultado ? (
         <View style={estilos.aviso}>
-          <Notice mensagem="O Bú ainda está aprendendo a recomendar sabonetes. Enquanto isso, dá uma olhada em todos eles!" tom="sucesso" />
+          <Notice
+            mensagem={
+              semResultado
+                ? 'O Bú não encontrou um sabonete ideal para essas respostas. Dá uma olhada em todos eles!'
+                : 'O Bú ainda está aprendendo a recomendar sabonetes. Enquanto isso, dá uma olhada em todos eles!'
+            }
+            tom="sucesso"
+          />
           <Button
             titulo="Ver todos os sabonetes"
             variante="secundario"

@@ -11,6 +11,29 @@ export type TipoPele = {
   nome: string;
 };
 
+export type Ingrediente = {
+  id: number;
+  nome: string;
+};
+
+// Perfil usado pelo quiz de recomendação. Os valores são os do backend (em maiúsculas).
+export type TipoPeleIndicado = 'SECA' | 'OLEOSA' | 'MISTA' | 'NORMAL' | 'TODOS';
+export type BaseProduto = 'PROCESSO_A_FRIO' | 'GLICERINA' | 'BASE_VEGETAL';
+
+export const TIPOS_PELE_INDICADO: { valor: TipoPeleIndicado; rotulo: string }[] = [
+  { valor: 'TODOS', rotulo: 'Todos os tipos' },
+  { valor: 'SECA', rotulo: 'Seca' },
+  { valor: 'OLEOSA', rotulo: 'Oleosa' },
+  { valor: 'MISTA', rotulo: 'Mista' },
+  { valor: 'NORMAL', rotulo: 'Normal' },
+];
+
+export const BASES_PRODUTO: { valor: BaseProduto; rotulo: string }[] = [
+  { valor: 'PROCESSO_A_FRIO', rotulo: 'Processo a frio' },
+  { valor: 'GLICERINA', rotulo: 'Glicerina' },
+  { valor: 'BASE_VEGETAL', rotulo: 'Base vegetal' },
+];
+
 export type Variacao = {
   id: number;
   produto: number;
@@ -36,6 +59,12 @@ export type Produto = {
   criado_em: string;
   tipo_pele: TipoPele[];
   categorias: Categoria[];
+  tipo_pele_indicado: TipoPeleIndicado;
+  base: BaseProduto | '';
+  essencia: string;
+  sem_fragrancia: boolean;
+  vegano: boolean;
+  ingredientes: Ingrediente[];
   variacoes: Variacao[];
 };
 
@@ -45,6 +74,12 @@ export type DadosProduto = {
   esta_ativo: boolean;
   categorias: number[];
   tipo_pele: number[];
+  tipo_pele_indicado: TipoPeleIndicado;
+  base: BaseProduto | '';
+  essencia: string;
+  sem_fragrancia: boolean;
+  vegano: boolean;
+  ingredientes: number[];
 };
 
 type FiltrosProdutos = {
@@ -148,6 +183,36 @@ export async function apagarTipoPele(id: number) {
 export async function contarProdutosDoTipoPele(id: number) {
   const resposta = await requisicao<Paginado<Produto>>('/catalog/produtos/', { parametros: { tipo_pele_id: id, page: 1 } });
   return resposta.count;
+}
+
+export async function listarIngredientes(): Promise<Ingrediente[]> {
+  const resposta = await requisicao<Paginado<Ingrediente>>('/catalog/ingredientes/', { autenticado: false });
+  return resposta.results;
+}
+
+export async function listarIngredientesPaginados(filtros: FiltrosLista): Promise<Paginado<Ingrediente>> {
+  return requisicao<Paginado<Ingrediente>>('/catalog/ingredientes/', {
+    parametros: {
+      page: filtros.pagina ?? 1,
+      search: filtros.busca,
+    },
+  });
+}
+
+export async function buscarIngrediente(id: number): Promise<Ingrediente> {
+  return requisicao<Ingrediente>(`/catalog/ingredientes/${id}/`);
+}
+
+export async function salvarIngrediente(id: number | null, nome: string): Promise<Ingrediente> {
+  if (id === null) {
+    return requisicao<Ingrediente>('/catalog/ingredientes/', { metodo: 'POST', corpo: { nome: nome } });
+  }
+  return requisicao<Ingrediente>(`/catalog/ingredientes/${id}/`, { metodo: 'PUT', corpo: { nome: nome } });
+}
+
+// Ingrediente ligado a produto não pode ser apagado: o backend responde 409 registro_protegido.
+export async function apagarIngrediente(id: number) {
+  await requisicao<void>(`/catalog/ingredientes/${id}/`, { metodo: 'DELETE' });
 }
 
 export async function listarProdutosAdmin(filtros: FiltrosProdutosAdmin): Promise<Paginado<Produto>> {

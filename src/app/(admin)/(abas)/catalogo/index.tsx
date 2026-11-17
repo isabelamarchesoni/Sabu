@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { listarProdutosAdmin, listarCategoriasPaginadas, listarTiposPelePaginados } from '../../../../services/catalogo';
+import { listarProdutosAdmin, listarCategoriasPaginadas, listarTiposPelePaginados, listarIngredientesPaginados } from '../../../../services/catalogo';
 import { listarVariacoes } from '../../../../services/variacoes';
 import { contarTodos } from '../../../../utils/contagens';
 import Screen from '../../../../components/ui/Screen';
@@ -24,6 +24,7 @@ export default function Catalogo() {
         listarVariacoes({ pagina: 1, apagadas: false }),
         listarCategoriasPaginadas({ pagina: 1 }),
         listarTiposPelePaginados({ pagina: 1 }),
+        listarIngredientesPaginados({ pagina: 1 }),
       ])
     );
   }
@@ -52,6 +53,7 @@ export default function Catalogo() {
         itens={[
           { titulo: 'Categorias', subtitulo: 'Grupos para filtrar a vitrine', rota: '/categorias', icone: 'albums-outline', contagem: contagens[2] },
           { titulo: 'Tipos de pele', subtitulo: 'Para qual pele cada um é indicado', rota: '/tipos-pele', icone: 'water-outline', contagem: contagens[3] },
+          { titulo: 'Ingredientes', subtitulo: 'Usados pelo quiz para respeitar alergias', rota: '/ingredientes', icone: 'flask-outline', contagem: contagens[4] },
         ]}
       />
     </Screen>

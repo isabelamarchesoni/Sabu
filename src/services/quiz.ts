@@ -1,7 +1,7 @@
 import { requisicao, ErroApi } from './api';
+import { listarIngredientes as listarIngredientesCatalogo } from './catalogo';
 
-export const ROTA_RECOMENDACAO = '/intelligence/recomendar-produto/';
-export const ROTA_INGREDIENTES = '/intelligence/ingredientes/';
+export const ROTA_RECOMENDACAO = '/recommendations/quiz/';
 
 export type TipoPeleQuiz = 'seca' | 'oleosa' | 'mista' | 'normal' | 'nao_sei';
 export type Frequencia = 'sim' | 'nao' | 'as_vezes';
@@ -72,66 +72,40 @@ export const PERGUNTAS: PerguntaQuiz[] = [
   { campo: 'alergia_ingrediente', titulo: 'Tem alergia a algum ingrediente?', ajuda: 'Pode marcar vários, ou seguir sem marcar nenhum.', opcoes: [], multipla: true },
 ];
 
-export type Recomendacao = {
-  produtoId: number;
-  variacaoId: number | null;
-  motivo: string;
+export type ProdutoRecomendado = {
+  id: number;
+  nome: string;
+  imagem: string | null;
+  tipo_pele_indicado: string;
+  base: string;
+  essencia: string;
+  prob: number;
 };
 
-function numero(valor: unknown) {
-  const convertido = Number(valor);
-  return Number.isFinite(convertido) && convertido > 0 ? convertido : null;
+export type RespostaRecomendacao = {
+  produtos: ProdutoRecomendado[];
+  aviso: string;
+};
+
+export type Recomendacao = {
+  produtoId: number;
+  aviso: string;
+};
+
+// O backend devolve até 3 produtos, do mais compatível para o menos. Lista vazia: nenhum sabonete passou nas regras.
+export async function recomendarProduto(respostas: RespostasQuiz): Promise<Recomendacao | null> {
+  const resposta = await requisicao<RespostaRecomendacao>(ROTA_RECOMENDACAO, { metodo: 'POST', corpo: respostas, autenticado: false });
+  const primeiro = resposta.produtos[0];
+  return primeiro ? { produtoId: primeiro.id, aviso: resposta.aviso } : null;
 }
 
-function lerRecomendacao(resposta: unknown): Recomendacao | null {
-  if (!resposta || typeof resposta !== 'object') {
-    return null;
-  }
-  const dados = resposta as Record<string, unknown>;
-  const base = (dados.recomendacao && typeof dados.recomendacao === 'object' ? dados.recomendacao : dados) as Record<string, unknown>;
-  const produto = base.produto && typeof base.produto === 'object' ? (base.produto as Record<string, unknown>).id : base.produto;
-  const variacao = base.variacao && typeof base.variacao === 'object' ? (base.variacao as Record<string, unknown>).id : base.variacao;
-  const produtoId = numero(base.produto_id ?? produto);
-  if (produtoId === null) {
-    return null;
-  }
-  const motivo = base.motivo ?? base.explicacao ?? base.justificativa ?? '';
-  return {
-    produtoId: produtoId,
-    variacaoId: numero(base.variacao_id ?? variacao),
-    motivo: typeof motivo === 'string' ? motivo : '',
-  };
-}
-
-export async function recomendarProduto(respostas: RespostasQuiz): Promise<Recomendacao> {
-  const resposta = await requisicao<unknown>(ROTA_RECOMENDACAO, { metodo: 'POST', corpo: respostas, autenticado: false });
-  const recomendacao = lerRecomendacao(resposta);
-  if (!recomendacao) {
-    throw new ErroApi(422, 'recomendacao_invalida', 'O Bú não conseguiu escolher um sabonete com essas respostas.', null);
-  }
-  return recomendacao;
-}
-
+// A alergia é enviada pelo nome do ingrediente, que é o que o backend valida.
+// A rota é paginada (25 por página); por enquanto só a primeira página é usada.
 export async function listarIngredientes(): Promise<OpcaoQuiz[]> {
-  const resposta = await requisicao<unknown>(ROTA_INGREDIENTES, { autenticado: false });
-  const lista = Array.isArray(resposta) ? resposta : resposta && typeof resposta === 'object' && Array.isArray((resposta as Record<string, unknown>).results) ? ((resposta as Record<string, unknown>).results as unknown[]) : [];
-  return lista
-    .map(function (item): OpcaoQuiz | null {
-      if (typeof item === 'string') {
-        return { valor: item, rotulo: item };
-      }
-      if (item && typeof item === 'object') {
-        const dados = item as Record<string, unknown>;
-        const nome = dados.nome ?? dados.name;
-        if (typeof nome === 'string') {
-          return { valor: typeof dados.id === 'number' ? dados.id : nome, rotulo: nome };
-        }
-      }
-      return null;
-    })
-    .filter(function (opcao): opcao is OpcaoQuiz {
-      return opcao !== null;
-    });
+  const ingredientes = await listarIngredientesCatalogo();
+  return ingredientes.map(function (item) {
+    return { valor: item.nome, rotulo: item.nome };
+  });
 }
 
 export function recomendacaoIndisponivel(erro: unknown) {

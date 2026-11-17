@@ -29,7 +29,7 @@ function lerResumo(texto: string | undefined): ResumoQuiz {
 
 export default function ResultadoQuiz() {
   const { cores } = useContext(TemaContext);
-  const parametros = useLocalSearchParams<{ produto: string; variacao?: string; motivo?: string; resumo?: string }>();
+  const parametros = useLocalSearchParams<{ produto: string; variacao?: string; motivo?: string; aviso?: string; resumo?: string }>();
   const resumo = lerResumo(parametros.resumo);
 
   const [produto, setProduto] = useState<Produto | null>(null);
@@ -180,11 +180,19 @@ export default function ResultadoQuiz() {
           }}
         />
       </View>
+
+      {parametros.aviso ? <Text style={[estilos.aviso, { color: cores.textoApoio }]}>{parametros.aviso}</Text> : null}
     </Screen>
   );
 }
 
 const estilos = StyleSheet.create({
+  aviso: {
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
   destaque: {
     flexDirection: 'row',
     alignItems: 'center',
