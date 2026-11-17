@@ -64,8 +64,7 @@ export const SITUACOES_PEDIDO: Record<StatusPedido, { texto: string; tom: 'alert
 
 type FiltrosClientes = {
   pagina?: number;
-  nome?: string;
-  cpfCnpj?: string;
+  busca?: string;
   ordenacao?: string;
 };
 
@@ -84,8 +83,7 @@ export async function listarClientes(filtros: FiltrosClientes): Promise<Paginado
   return requisicao<Paginado<Cliente>>('/orders/clientes/', {
     parametros: {
       page: filtros.pagina ?? 1,
-      nome: filtros.nome,
-      cpf_cnpj: filtros.cpfCnpj,
+      search: filtros.busca,
       ordering: filtros.ordenacao,
     },
   });
