@@ -27,13 +27,13 @@ export default function Splash() {
       Animated.delay(250),
       Animated.timing(piscada, {
         toValue: 1,
-        duration: 70,
+        duration: 40,
         useNativeDriver: DRIVER_NATIVO,
       }),
       Animated.delay(260),
       Animated.timing(piscada, {
         toValue: 0,
-        duration: 90,
+        duration: 60,
         useNativeDriver: DRIVER_NATIVO,
       }),
       Animated.delay(250),
@@ -56,14 +56,13 @@ export default function Splash() {
 
   const escalaBu = crescimento.interpolate({ inputRange: [0, 1], outputRange: [0.15, 1] });
   const giroBu = crescimento.interpolate({ inputRange: [0, 1], outputRange: ['-12deg', '0deg'] });
-  const olhoAberto = piscada.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
   const escalaCirculo = expansao.interpolate({ inputRange: [0, 1], outputRange: [0.01, 14] });
   const subidaMarca = marca.interpolate({ inputRange: [0, 1], outputRange: [12, 0] });
 
   return (
     <View style={[styles.tela, { backgroundColor: cores.fundo }]} accessibilityLabel="Sabu, abrindo o aplicativo. O sapinho Bú pisca para você.">
       <Animated.View style={[styles.bu, { transform: [{ scale: escalaBu }, { rotate: giroBu }] }]}>
-        <Animated.Image source={require('../../assets/bu/bu-cabeca.png')} style={[styles.imagemBu, { opacity: olhoAberto }]} />
+        <Animated.Image source={require('../../assets/bu/bu-cabeca.png')} style={styles.imagemBu} />
         <Animated.Image source={require('../../assets/bu/bu-piscando.png')} style={[styles.imagemBu, styles.sobreposta, { opacity: piscada }]} />
       </Animated.View>
 
