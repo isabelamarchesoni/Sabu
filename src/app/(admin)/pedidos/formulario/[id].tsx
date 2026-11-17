@@ -5,11 +5,21 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { TemaContext } from '../../../../theme/TemaContext';
 import { listarProdutosAdmin, type Variacao } from '../../../../services/catalogo';
 import { listarVariacoes, buscarVariacao } from '../../../../services/variacoes';
-import { listarClientes, buscarCliente, buscarPedido, criarPedido, atualizarPedido, type Cliente, type DadosEndereco, type Pedido } from '../../../../services/vendas';
+import { listarClientes, buscarCliente, buscarPedido, criarPedido, atualizarPedido, type Cliente, type DadosEndereco, type Pedido, type TipoDesconto } from '../../../../services/vendas';
 import { ErroApi, mensagemDeErro } from '../../../../services/api';
 import { erroDoCampo } from '../../../../utils/erros';
 import { formatarDinheiro, precoAtual } from '../../../../utils/formatar';
-import { digitos, mascararCep } from '../../../../utils/mascaras';
+import { digitos, mascararCep, mascararDecimal, mascararMoeda } from '../../../../utils/mascaras';
+import {
+  formatarCentavos,
+  formatarPercentual,
+  montarPayloadDesconto,
+  pedidoTemDesconto,
+  resumirDesconto,
+  rotuloDesconto,
+  validarDesconto,
+  type LinhaDesconto,
+} from '../../../../utils/desconto';
 import Screen from '../../../../components/ui/Screen';
 import Header from '../../../../components/ui/Header';
 import TextField from '../../../../components/ui/TextField';
@@ -27,7 +37,7 @@ type LinhaItem = {
 };
 
 const ESTADOS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
-const CAMPOS = ['cliente', 'cep', 'logradouro', 'numero_residencia', 'complemento', 'bairro', 'cidade', 'sigla_estado', 'observacao'];
+const CAMPOS = ['cliente', 'cep', 'logradouro', 'numero_residencia', 'complemento', 'bairro', 'cidade', 'sigla_estado', 'observacao', 'tipo_desconto', 'desconto'];
 const LIMITES: Record<string, number> = {
   logradouro: 150,
   numero_residencia: 20,
@@ -36,6 +46,11 @@ const LIMITES: Record<string, number> = {
   cidade: 50,
 };
 const LIMITE_QUANTIDADE = 1000;
+const OPCOES_DESCONTO = [
+  { valor: 'NENHUM', rotulo: 'Sem desconto' },
+  { valor: 'FIXO', rotulo: 'Valor fixo (R$)' },
+  { valor: 'PERCENTUAL', rotulo: 'Percentual (%)' },
+];
 
 export default function FormularioPedido() {
   const { cores } = useContext(TemaContext);
@@ -58,6 +73,8 @@ export default function FormularioPedido() {
     observacao: '',
   });
   const [itens, setItens] = useState<LinhaItem[]>([{ chave: 1, variacaoId: null, quantidade: '1' }]);
+  const [tipoDesconto, setTipoDesconto] = useState<TipoDesconto | ''>('');
+  const [valorDesconto, setValorDesconto] = useState('');
   const [errosItens, setErrosItens] = useState<Record<number, string>>({});
   const [erros, setErros] = useState<Record<string, string>>({});
   const [erroGeral, setErroGeral] = useState('');
@@ -171,6 +188,18 @@ export default function FormularioPedido() {
     setErros({ ...erros, [campo]: '' });
   }
 
+  function mudarTipoDesconto(valores: (string | number)[]) {
+    const escolhido = valores.length > 0 ? String(valores[0]) : 'NENHUM';
+    setTipoDesconto(escolhido === 'FIXO' || escolhido === 'PERCENTUAL' ? escolhido : '');
+    setValorDesconto('');
+    setErros({ ...erros, tipo_desconto: '', desconto: '' });
+  }
+
+  function mudarValorDesconto(texto: string) {
+    setValorDesconto(tipoDesconto === 'FIXO' ? mascararMoeda(texto) : mascararDecimal(texto, 2));
+    setErros({ ...erros, desconto: '' });
+  }
+
   function variacaoPorId(idVariacao: number | null) {
     if (idVariacao === null) {
       return undefined;
@@ -205,6 +234,18 @@ export default function FormularioPedido() {
         return item.chave !== chave;
       })
     );
+  }
+
+  function linhasParaDesconto() {
+    const linhas: (LinhaDesconto & { chave: number })[] = [];
+    itens.forEach(function (item) {
+      const variacao = variacaoPorId(item.variacaoId);
+      const quantidade = Number(item.quantidade) || 0;
+      if (variacao && quantidade > 0) {
+        linhas.push({ chave: item.chave, variacaoId: variacao.id, totalCentavos: Math.round(precoAtual(variacao) * 100) * quantidade });
+      }
+    });
+    return linhas;
   }
 
   function validarEndereco() {
@@ -273,6 +314,15 @@ export default function FormularioPedido() {
     setFaltaEstoque(false);
     const novosErros = validarEndereco();
     const novosErrosItens = criando ? validarItens() : {};
+    if (criando) {
+      const subtotal = linhasParaDesconto().reduce(function (soma, linha) {
+        return soma + linha.totalCentavos;
+      }, 0);
+      const erroDesconto = validarDesconto(tipoDesconto, valorDesconto, subtotal);
+      if (erroDesconto) {
+        novosErros.desconto = erroDesconto;
+      }
+    }
     setErros(novosErros);
     setErrosItens(novosErrosItens);
     if (Object.keys(novosErros).length > 0 || Object.keys(novosErrosItens).length > 0) {
@@ -291,6 +341,7 @@ export default function FormularioPedido() {
           itens: itens.map(function (item) {
             return { variacao: item.variacaoId as number, quantidade_item: Number(item.quantidade) };
           }),
+          ...montarPayloadDesconto(tipoDesconto, valorDesconto),
         });
         router.replace(`/pedidos/${novo.id}`);
       } else {
@@ -340,10 +391,22 @@ export default function FormularioPedido() {
   }
 
   const bloqueado = !criando && pedidoAtual !== null && pedidoAtual.status !== 'PENDENTE';
-  const totalEstimado = itens.reduce(function (soma, item) {
-    const variacao = variacaoPorId(item.variacaoId);
-    return variacao ? soma + precoAtual(variacao) * (Number(item.quantidade) || 0) : soma;
-  }, 0);
+
+  const linhasDesconto = linhasParaDesconto();
+  const previa = resumirDesconto(tipoDesconto, valorDesconto, linhasDesconto);
+  const descontoPorChave: Record<number, number> = {};
+  linhasDesconto.forEach(function (linha, indice) {
+    descontoPorChave[linha.chave] = previa.porLinha[indice];
+  });
+
+  function linhaResumo(rotulo: string, valor: string, forte = false) {
+    return (
+      <View style={estilos.linhaResumo} accessible accessibilityLabel={`${rotulo}: ${valor}`}>
+        <Text style={[forte ? estilos.rotuloTotal : estilos.rotuloResumo, { color: cores.textoApoio }]}>{rotulo}</Text>
+        <Text style={[forte ? estilos.valorTotal : estilos.valorResumo, { color: cores.texto }]}>{valor}</Text>
+      </View>
+    );
+  }
 
   return (
     <Screen rolavel>
@@ -397,6 +460,7 @@ export default function FormularioPedido() {
         {criando
           ? itens.map(function (item, indice) {
               const variacao = variacaoPorId(item.variacaoId);
+              const descontoDoItem = descontoPorChave[item.chave] ?? 0;
               return (
                 <View key={item.chave} style={[estilos.item, { backgroundColor: cores.cartao, borderColor: cores.borda }]}>
                   <Select
@@ -414,6 +478,9 @@ export default function FormularioPedido() {
                     <Text style={[estilos.info, { color: cores.textoApoio }]}>
                       Em estoque: {variacao.quantidade_estoque} · {formatarDinheiro(precoAtual(variacao))} cada
                     </Text>
+                  ) : null}
+                  {descontoDoItem > 0 ? (
+                    <Text style={[estilos.info, { color: cores.textoApoio }]}>Desconto estimado neste item: − {formatarCentavos(descontoDoItem)}</Text>
                   ) : null}
                   <TextField
                     rotulo="Quantidade"
@@ -450,11 +517,60 @@ export default function FormularioPedido() {
               );
             })}
         {criando ? <Button titulo="Adicionar item" variante="secundario" icone="add" aoPressionar={adicionarItem} /> : null}
-        <View style={[estilos.total, { borderColor: cores.borda }]}>
-          <Text style={[estilos.rotuloTotal, { color: cores.textoApoio }]}>{criando ? 'Total estimado' : 'Total'}</Text>
-          <Text style={[estilos.valorTotal, { color: cores.texto }]}>
-            {formatarDinheiro(criando ? totalEstimado : pedidoAtual ? pedidoAtual.valor_total : 0)}
-          </Text>
+      </View>
+
+      {criando ? (
+        <View style={estilos.secao}>
+          <SectionTitle titulo="Desconto" />
+          <Select
+            rotulo="Tipo de desconto"
+            opcoes={OPCOES_DESCONTO}
+            selecionados={[tipoDesconto || 'NENHUM']}
+            aoMudar={mudarTipoDesconto}
+            placeholder="Sem desconto"
+            erro={erros.tipo_desconto}
+          />
+          {tipoDesconto ? (
+            <TextField
+              rotulo={tipoDesconto === 'FIXO' ? 'Valor do desconto (R$)' : 'Percentual de desconto (%)'}
+              valor={valorDesconto}
+              aoMudar={mudarValorDesconto}
+              placeholder={tipoDesconto === 'FIXO' ? 'R$ 0,00' : '0,00 %'}
+              erro={erros.desconto || previa.erro}
+              teclado={tipoDesconto === 'FIXO' ? 'number-pad' : 'decimal-pad'}
+              desabilitado={salvando}
+            />
+          ) : null}
+        </View>
+      ) : null}
+
+      <View style={estilos.secao}>
+        <SectionTitle titulo={criando ? 'Resumo (estimativa)' : 'Resumo'} />
+        <View style={[estilos.resumo, { borderColor: cores.borda }]}>
+          {criando ? (
+            <>
+              {linhaResumo('Subtotal', formatarCentavos(previa.subtotal))}
+              {previa.valorDesconto > 0
+                ? linhaResumo(
+                    tipoDesconto === 'PERCENTUAL' ? `Desconto (${formatarPercentual(Number(valorDesconto.replace(',', '.')))})` : 'Desconto',
+                    `− ${formatarCentavos(previa.valorDesconto)}`
+                  )
+                : null}
+              {linhaResumo('Total estimado', formatarCentavos(previa.total), true)}
+              <Text style={[estilos.info, { color: cores.textoApoio }]} accessibilityLiveRegion="polite">
+                Valores estimados com os preços atuais da tela. O valor oficial é calculado pelo servidor ao registrar o pedido e pode mudar se os preços mudarem.
+              </Text>
+            </>
+          ) : pedidoAtual ? (
+            <>
+              {linhaResumo('Subtotal', formatarDinheiro(pedidoAtual.valor_subtotal))}
+              {pedidoTemDesconto(pedidoAtual)
+                ? linhaResumo(rotuloDesconto(pedidoAtual.tipo_desconto, pedidoAtual.desconto), `− ${formatarDinheiro(pedidoAtual.valor_desconto)}`)
+                : null}
+              {linhaResumo('Total', formatarDinheiro(pedidoAtual.valor_total), true)}
+              <Text style={[estilos.info, { color: cores.textoApoio }]}>O desconto não pode ser alterado depois que o pedido é criado.</Text>
+            </>
+          ) : null}
         </View>
       </View>
 
@@ -585,12 +701,22 @@ const estilos = StyleSheet.create({
   info: {
     fontSize: 13,
   },
-  total: {
+  resumo: {
+    borderTopWidth: 1,
+    paddingTop: 12,
+    gap: 8,
+  },
+  linhaResumo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
-    paddingTop: 12,
+  },
+  rotuloResumo: {
+    fontSize: 14,
+  },
+  valorResumo: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   rotuloTotal: {
     fontSize: 14,

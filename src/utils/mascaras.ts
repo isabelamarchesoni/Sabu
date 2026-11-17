@@ -69,3 +69,13 @@ export function mascararCep(texto: string) {
   }
   return `${numeros.slice(0, 5)}-${numeros.slice(5)}`;
 }
+
+export function mascararMoeda(texto: string) {
+  const numeros = somenteDigitos(texto).replace(/^0+/, '').slice(0, 10);
+  if (numeros.length === 0) {
+    return '';
+  }
+  const cheio = numeros.padStart(3, '0');
+  const inteiro = cheio.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${inteiro},${cheio.slice(-2)}`;
+}

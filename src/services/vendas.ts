@@ -17,11 +17,16 @@ export type DadosCliente = {
 
 export type StatusPedido = 'PENDENTE' | 'CONCLUIDO' | 'CANCELADO' | 'ESTORNADO_COM_DEVOLUCAO' | 'ESTORNADO_SEM_DEVOLUCAO';
 
+export type TipoDesconto = 'FIXO' | 'PERCENTUAL';
+
 export type ItemPedido = {
   id: number;
   variacao: number;
   quantidade_item: number;
   valor_unitario: string;
+  valor_desconto: string;
+  valor_final: string;
+  promocao: boolean;
 };
 
 export type Pedido = {
@@ -35,6 +40,11 @@ export type Pedido = {
   cidade: string;
   sigla_estado: string;
   status: StatusPedido;
+  // soma dos itens antes do desconto
+  valor_subtotal: string;
+  tipo_desconto: TipoDesconto | '';
+  desconto: string;
+  valor_desconto: string;
   valor_total: string;
   observacao: string;
   criado_em: string;
@@ -142,6 +152,8 @@ export type DadosEndereco = {
 export type DadosPedido = Partial<DadosEndereco> & {
   cliente?: number;
   itens: { variacao: number; quantidade_item: number }[];
+  tipo_desconto?: TipoDesconto;
+  desconto?: string;
 };
 
 export async function criarPedido(dados: DadosPedido): Promise<Pedido> {
