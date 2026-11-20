@@ -15,6 +15,7 @@ import { carregarResumo, type ResumoPainel } from '../../../../services/painel';
 import { ErroApi, mensagemDeErro } from '../../../../services/api';
 import { avatarPorChave, lerAvatar } from '../../../../utils/avatar';
 import type { Usuario } from '../../../../services/sessao';
+import { formatarDataHora } from '../../../../utils/datas';
 
 function saudacaoDoHorario() {
   const hora = new Date().getHours();
@@ -74,6 +75,7 @@ export default function Inicio() {
   const primeiroNome = usuario ? usuario.nome.split(' ')[0] : '';
   const escolhido = avatarPorChave(avatar);
   const pendentes = resumo ? resumo.pedidosPendentes : null;
+  const textoAtualizacao = resumo ? formatarDataHora(resumo.atualizadoEm) : '';
 
   return (
     <Screen rolavel>
@@ -103,6 +105,7 @@ export default function Inicio() {
 
       <View style={estilos.secao}>
         <SectionTitle titulo="Precisa de atenção" />
+        {textoAtualizacao ? <Text style={[estilos.atualizacao, { color: cores.textoApoio }]}>Última atualização: {textoAtualizacao}</Text> : null}
         {erro ? <Notice mensagem={erro} tom="erro" /> : null}
         {erro ? <Button titulo="Tentar novamente" variante="texto" aoPressionar={carregarPainel} /> : null}
         <View style={estilos.linha}>
@@ -180,6 +183,9 @@ const estilos = StyleSheet.create({
   secao: {
     marginTop: 24,
     gap: 12,
+  },
+  atualizacao: {
+    fontSize: 13,
   },
   linha: {
     flexDirection: 'row',
