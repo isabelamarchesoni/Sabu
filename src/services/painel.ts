@@ -1,13 +1,25 @@
-import { requisicao, type Paginado } from './api';
+import { requisicao } from './api';
 
-export type ResumoPainel = { pedidosPendentes: number; lotesMateriaVencidos: number; lotesSabonetesVencidos: number };
+export type ResumoPainel = {
+  pedidosPendentes: number;
+  lotesMateriaVencidos: number;
+  lotesSabonetesVencidos: number;
+  atualizadoEm: string;
+};
 
-async function contar(caminho: string, status: string) {
-  const resposta = await requisicao<Paginado<unknown>>(caminho, { parametros: { status: status, page: 1 } });
-  return resposta.count;
-}
+type ResumoApi = {
+  pedidos_pendentes: number;
+  lotes_materia_prima_vencidos: number;
+  lotes_produto_vencidos: number;
+  atualizado_em: string;
+};
 
 export async function carregarResumo(): Promise<ResumoPainel> {
-  const [pedidosPendentes, lotesMateriaVencidos, lotesSabonetesVencidos] = await Promise.all([contar('/orders/pedidos/', 'PENDENTE'), contar('/inventory/lotes-materia-prima/', 'VENCIDO'), contar('/inventory/lotes-variacao/', 'VENCIDO')]);
-  return { pedidosPendentes: pedidosPendentes, lotesMateriaVencidos: lotesMateriaVencidos, lotesSabonetesVencidos: lotesSabonetesVencidos };
+  const dados = await requisicao<ResumoApi>('/dashboard/resumo/');
+  return {
+    pedidosPendentes: dados.pedidos_pendentes,
+    lotesMateriaVencidos: dados.lotes_materia_prima_vencidos,
+    lotesSabonetesVencidos: dados.lotes_produto_vencidos,
+    atualizadoEm: dados.atualizado_em,
+  };
 }
